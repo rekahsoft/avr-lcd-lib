@@ -37,32 +37,24 @@ int main(void) {
   
   STATUS_LED_DDR |= 1 << STATUS_LED; // DEBUG
 
+  const char* data[4] = { "Hello there friend!!",
+                          "Anyways, I must go..",
+                          "Isn't it a nice day.",
+                          "To a midnight show;)"  };
+
   initLCD();
-  //quickInitLCD();
+  //initLCDByInternalReset();
   
   while (1) {
-    writeCharToLCD('H');
-    writeCharToLCD('e');
-    writeCharToLCD('l');
-    writeCharToLCD('l');
-    writeCharToLCD('o');
-    writeCharToLCD(' ');
-    writeCharToLCD('t');
-    writeCharToLCD('h');
-    writeCharToLCD('e');
-    writeCharToLCD('r');
-    writeCharToLCD('e');
-    writeCharToLCD(' ');
-    writeCharToLCD('f');
-    writeCharToLCD('r');
-    writeCharToLCD('i');
-    writeCharToLCD('e');
-    writeCharToLCD('n');
-    writeCharToLCD('d');
-    writeCharToLCD('!');
+    for (uint8_t i = 0; i < 4; i++) {
+      writeStringToLCD(data[i]);
+    }
+    _delay_ms(5000);
+    clearScreen();
+
 
     //flashLED(5); // DEBUG
-    _delay_ms(5000);
+    _delay_ms(3000);
   }
 
   return 0;

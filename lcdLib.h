@@ -24,7 +24,7 @@
 // Includes
 #include <avr/io.h>
 
-// Constants
+// LCD data bus PORT, PIN and DDR
 #define LCD_DBUS_PORT PORTB
 #define LCD_DBUS_DDR  DDRB
 #define LCD_DBUS_PIN  PINB
@@ -32,19 +32,34 @@
 #define LCD_CTRL_PORT PORTD
 #define LCD_CTRL_DDR  DDRD
 
-#define LCD_RS       PD2
-#define LCD_RW       PD3
-#define LCD_ENABLE   PD4
+#define LCD_RS        PD2
+#define LCD_RW        PD3
+#define LCD_ENABLE    PD4
 
-#define LCD_BF       PB7
+#define LCD_DBUS0     PB0
+#define LCD_DBUS1     PB1
+#define LCD_DBUS2     PB2
+#define LCD_DBUS3     PB3
+#define LCD_DBUS4     PB4
+#define LCD_DBUS5     PB5
+#define LCD_DBUS6     PB6
+#define LCD_DBUS7     PB7
+#define LCD_BF        PB7
 
-#define LCD_DELAY    50
+// LCD delays (in microseconds)
+#define LCD_DELAY              50
+#define LCD_CLEAR_SCREEN_DELAY 16000
+#define LCD_SEND_DELAY         40 // unused
+
+// LCD Commands
+#define CMD_CLEAR_SCREEN 0x01
+#define CMD_RETURN_HOME  0x02
+
+//------------------------------------
 
 #define STATUS_LED_PORT PORTC
 #define STATUS_LED_DDR  DDRC
 #define STATUS_LED      PC5
-
-//------------------------------------
 
 // Function definitions
 void flashLED(uint8_t times);
@@ -63,12 +78,16 @@ void writeCharToLCD_(char c);
 
 void writeCharToLCD(char c);
 
+void writeStringToLCD(const char* str);
+
+void clearScreen(void);
+
 char readCharFromLCD(void);
 
 /*
   Do software initialization as specified by the datasheet
 */
-void initLCD (void);
+void initLCD(void);
 
-void quickInitLCD(void);
+void initLCDByInternalReset(void);
 

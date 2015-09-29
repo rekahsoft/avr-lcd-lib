@@ -90,6 +90,18 @@ void writeCharToLCD(char c) {
   writeCharToLCD_(c);
 }
 
+void writeStringToLCD(const char* str) {
+  while (*str != '\0') {
+    writeCharToLCD(*str);
+    str++;
+  }
+}
+
+void clearScreen(void) {
+  writeLCDInstr(CMD_CLEAR_SCREEN);
+  _delay_us(LCD_CLEAR_SCREEN_DELAY);
+}
+
 char readCharFromLCD(void) {
   loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
 
@@ -165,11 +177,13 @@ void initLCD (void) {
   flashLED(5); // DEBUG
 }
 
-void quickInitLCD(void) {
+void initLCDByInternalReset(void) {
   enableLCDOutput();
   writeLCDInstr_(0x38);
   writeLCDInstr_(0x0F);
   writeLCDInstr_(0x06);
+  writeLCDInstr_(0x01);
+  _delay_ms(16);
 
   /* writeLCDInstr_(0x01); // Clear display */
   /* writeLCDInstr_(0x30); // RS=RW=0, 0b00110000 */
