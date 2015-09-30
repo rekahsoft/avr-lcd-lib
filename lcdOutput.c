@@ -50,7 +50,7 @@ int main(void) {
       writeStringToLCD(data[i]);
     }
     _delay_ms(5000);
-    clearScreen();
+    clearDisplay();
 
 
     //flashLED(5); // DEBUG

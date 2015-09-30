@@ -51,16 +51,13 @@ void clkLCD(void) {
 void loop_until_LCD_BF_clear(void) {
   LCD_CTRL_PORT = (LCD_CTRL_PORT & ~(1 << LCD_RS)) | (1 << LCD_RW); // RS=0, RW=1
   LCD_DBUS_DDR &= ~(1 << LCD_BF); // Set LCD_BF as input
-  clkLCD();
 
   STATUS_LED_PORT |= 1 << STATUS_LED; // DEBUG
-  while (bit_is_clear(LCD_DBUS_PIN, LCD_BF)) {
+  do {
     clkLCD();
-  }
-
+  } while (bit_is_clear(LCD_DBUS_PIN, LCD_BF));
   /* loop_until_bit_is_clear(LCD_DBUS_PIN, LCD_BF); */
   STATUS_LED_PORT &= ~(1 << STATUS_LED); // DEBUG
-
     
   LCD_DBUS_DDR = 0xff; // Reset all LCD_DBUS_PORT pins as outputs
 }
@@ -97,9 +94,14 @@ void writeStringToLCD(const char* str) {
   }
 }
 
-void clearScreen(void) {
-  writeLCDInstr(CMD_CLEAR_SCREEN);
-  _delay_us(LCD_CLEAR_SCREEN_DELAY);
+void clearDisplay(void) {
+  writeLCDInstr(CMD_CLEAR_DISPLAY);
+  _delay_us(LCD_CLEAR_DISPLAY_DELAY);
+}
+
+void returnHome(void) {
+  writeLCDInstr(CMD_RETURN_HOME);
+  _delay_us(LCD_RETURN_HOME_DELAY);
 }
 
 char readCharFromLCD(void) {
@@ -135,7 +137,7 @@ static inline void disableLCDOutput(void) {
 static inline void softwareLCDInitPulse(void) {
   enableLCDOutput();
   LCD_CTRL_PORT &= ~((1 << LCD_RS) | (1 << LCD_RW)); // RS=RW=0
-  LCD_DBUS_PORT = 0x30;
+  LCD_DBUS_PORT = CMD_INIT;
   clkLCD();
 }
 
@@ -143,36 +145,40 @@ static inline void softwareLCDInitPulse(void) {
   Do software initialization as specified by the datasheet
 */
 void initLCD (void) {
-  _delay_ms(30);     // Wait 15ms as per datasheet
+  enableLCDOutput();
+
+  // Wait minimum 15ms as per datasheet
+  _delay_ms(LCD_INIT_DELAY0);
 
   softwareLCDInitPulse();
   
-  // Disable transmission and wait minimum 4.1ms as per datasheet
-  //disableLCDOutput();
-  _delay_us(8200);
+  // Wait minimum 4.1ms as per datasheet
+  _delay_us(LCD_INIT_DELAY1);
 
   softwareLCDInitPulse();
 
-  // Disable transmission and wait minimum 100us as per datasheet
-  //disableLCDOutput();
-  _delay_us(200);
+  // Wait minimum 100us as per datasheet
+  _delay_us(LCD_INIT_DELAY2);
 
   softwareLCDInitPulse();
 
   // Function set (2 lines with 5x7 dot character font)
-  writeLCDInstr_(0x38); // RS=RW=0, 0b00111000
+  writeLCDInstr_(0x38); // RS=RW=0, 0b00111000, 0x38
 
-  /* BF now has to be checked */
+  /* BF now can be checked */
 
   // Set functions of LCD
-  writeLCDInstr_(0x08); // Display off
-  _delay_ms(1);
-  writeLCDInstr_(0x01); // Clear display
-  _delay_ms(16);
-  //_delay_us(15200 - LCD_DELAY); // Extra delay for clear display
+  writeLCDInstr_(INSTR_DISPLAY); // Display off
+  _delay_us(LCD_GENERIC_INSTR_DELAY);
+
+  writeLCDInstr_(CMD_CLEAR_DISPLAY); // Clear display
+  _delay_us(LCD_CLEAR_DISPLAY_DELAY);
+
   writeLCDInstr_(0x06); // Increment mode, no shift
-  _delay_ms(1);
+  _delay_us(LCD_GENERIC_INSTR_DELAY);
+
   writeLCDInstr_(0x0E); // Display on, cursor on, blink off
+  _delay_us(LCD_GENERIC_INSTR_DELAY);
 
   flashLED(5); // DEBUG
 }

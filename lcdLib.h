@@ -46,14 +46,54 @@
 #define LCD_DBUS7     PB7
 #define LCD_BF        PB7
 
-// LCD delays (in microseconds)
-#define LCD_DELAY              50
-#define LCD_CLEAR_SCREEN_DELAY 16000
-#define LCD_SEND_DELAY         40 // unused
+// LCD in 4 bit mode (default is 8 bit mode)
+//#define FOUR_BIT_MODE
 
-// LCD Commands
-#define CMD_CLEAR_SCREEN 0x01
-#define CMD_RETURN_HOME  0x02
+// LCD delays (in microseconds when unspecified)
+#define LCD_DELAY               1
+#define LCD_INIT_DELAY0         30    // milliseconds
+#define LCD_INIT_DELAY1         8200
+#define LCD_INIT_DELAY2         200
+
+#define LCD_CLEAR_DISPLAY_DELAY 16000
+#define LCD_RETURN_HOME_DELAY   16000
+#define LCD_GENERIC_INSTR_DELAY 50
+
+/* LCD Commands */
+
+// Simple commands with no options
+#define CMD_INIT             0x30
+#define CMD_CLEAR_DISPLAY    0x01
+#define CMD_RETURN_HOME      0x02
+
+// Entry Set instruction and associated options
+#define INSTR_ENTRY_SET      0x04
+#define INSTR_ENTRY_SET_ID   0x02
+#define INSTR_ENTRY_SET_S    0x01
+
+// Display control instruction and associated options
+#define INSTR_DISPLAY        0x08
+#define INSTR_DISPLAY_D      0x04
+#define INSTR_DISPLAY_C      0x02
+#define INSTR_DISPLAY_B      0x01
+
+// Cursor or display shift instruction and associated options
+#define INSTR_MOV_SHIFT      0x10
+#define INSTR_MOV_SHIFT_SC   0x08
+#define INSTR_MOV_SHIFT_RL   0x04
+
+// Function set instruction and associated options
+#define INSTR_FUNC_SET       0x20
+#define INSTR_FUNC_SET_DL    4
+#define INSTR_FUNC_SET_N     3
+#define INSTR_FUNC_SET_F     2
+
+// Set CG RAM address instruction
+#define INSTR_CGRAM_ADDR     0x60
+
+// Set DD RAM address instruction
+#define INSTR_DDRAM_ADDR     0x80
+
 
 //------------------------------------
 
@@ -80,7 +120,9 @@ void writeCharToLCD(char c);
 
 void writeStringToLCD(const char* str);
 
-void clearScreen(void);
+void clearDisplay(void);
+
+void returnHome(void);
 
 char readCharFromLCD(void);
 
