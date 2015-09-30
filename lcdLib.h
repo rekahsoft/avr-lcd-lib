@@ -50,8 +50,8 @@
 //#define FOUR_BIT_MODE
 
 // LCD delays (in microseconds when unspecified)
-#define LCD_DELAY               1
-#define LCD_INIT_DELAY0         30    // milliseconds
+#define LCD_DELAY               25
+#define LCD_INIT_DELAY0         15    // milliseconds
 #define LCD_INIT_DELAY1         8200
 #define LCD_INIT_DELAY2         200
 
@@ -68,14 +68,14 @@
 
 // Entry Set instruction and associated options
 #define INSTR_ENTRY_SET      0x04
-#define INSTR_ENTRY_SET_ID   0x02
-#define INSTR_ENTRY_SET_S    0x01
+#define INSTR_ENTRY_SET_ID   1
+#define INSTR_ENTRY_SET_S    0
 
 // Display control instruction and associated options
 #define INSTR_DISPLAY        0x08
-#define INSTR_DISPLAY_D      0x04
-#define INSTR_DISPLAY_C      0x02
-#define INSTR_DISPLAY_B      0x01
+#define INSTR_DISPLAY_D      2
+#define INSTR_DISPLAY_C      1
+#define INSTR_DISPLAY_B      0
 
 // Cursor or display shift instruction and associated options
 #define INSTR_MOV_SHIFT      0x10

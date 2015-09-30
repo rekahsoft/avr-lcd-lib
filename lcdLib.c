@@ -163,7 +163,8 @@ void initLCD (void) {
   softwareLCDInitPulse();
 
   // Function set (2 lines with 5x7 dot character font)
-  writeLCDInstr_(0x38); // RS=RW=0, 0b00111000, 0x38
+  // RS=RW=0, DBUS=b00111000,0x38
+  writeLCDInstr_(INSTR_FUNC_SET | (1 << INSTR_FUNC_SET_DL) | (1 << INSTR_FUNC_SET_N));
 
   /* BF now can be checked */
 
@@ -171,13 +172,16 @@ void initLCD (void) {
   writeLCDInstr_(INSTR_DISPLAY); // Display off
   _delay_us(LCD_GENERIC_INSTR_DELAY);
 
-  writeLCDInstr_(CMD_CLEAR_DISPLAY); // Clear display
+  // Clear display
+  writeLCDInstr_(CMD_CLEAR_DISPLAY);
   _delay_us(LCD_CLEAR_DISPLAY_DELAY);
 
-  writeLCDInstr_(0x06); // Increment mode, no shift
+  // Increment mode, no shift
+  writeLCDInstr_(INSTR_ENTRY_SET | (1 << INSTR_ENTRY_SET_ID));
   _delay_us(LCD_GENERIC_INSTR_DELAY);
 
-  writeLCDInstr_(0x0E); // Display on, cursor on, blink off
+  // Display on, cursor on, blink off
+  writeLCDInstr_(INSTR_DISPLAY | (1 << INSTR_DISPLAY_D) | (1 << INSTR_DISPLAY_C));
   _delay_us(LCD_GENERIC_INSTR_DELAY);
 
   flashLED(5); // DEBUG
