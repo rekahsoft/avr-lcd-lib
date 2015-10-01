@@ -85,7 +85,7 @@
 #ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
 #define LCD_DBUS0      PB0
 #define LCD_DBUS0_PORT PORTB
-#define LCD_DBYS0_DDR  DDRB
+#define LCD_DBUS0_DDR  DDRB
 #define LCD_DBUS0_PIN  PINB
 
 #define LCD_DBUS1      PB1

@@ -52,7 +52,7 @@ void loop_until_LCD_BF_clear(void) {
 
   // Set LCD_BF as input
 #if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
-  LCD_DBUS7_PORT &= ~(1 << LCD_BF);
+  LCD_DBUS7_DDR &= ~(1 << LCD_BF);
 #else
   LCD_DBUS_DDR &= ~(1 << LCD_BF);
 #endif
@@ -69,15 +69,15 @@ void loop_until_LCD_BF_clear(void) {
   STATUS_LED_PORT &= ~(1 << STATUS_LED); // DEBUG
 
 #if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
-  LCD_DBUS7_DDR &= ~(1 << LCD_DBUS7);
-  LCD_DBUS6_DDR &= ~(1 << LCD_DBUS6);
-  LCD_DBUS5_DDR &= ~(1 << LCD_DBUS5);
-  LCD_DBUS4_DDR &= ~(1 << LCD_DBUS4);
+  LCD_DBUS7_DDR |= (1 << LCD_DBUS7);
+  LCD_DBUS6_DDR |= (1 << LCD_DBUS6);
+  LCD_DBUS5_DDR |= (1 << LCD_DBUS5);
+  LCD_DBUS4_DDR |= (1 << LCD_DBUS4);
 #ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
-  LCD_DBUS3_DDR &= ~(1 << LCD_DBUS3);
-  LCD_DBUS2_DDR &= ~(1 << LCD_DBUS2);
-  LCD_DBUS1_DDR &= ~(1 << LCD_DBUS1);
-  LCD_DBUS0_DDR &= ~(1 << LCD_DBUS0);
+  LCD_DBUS3_DDR |= (1 << LCD_DBUS3);
+  LCD_DBUS2_DDR |= (1 << LCD_DBUS2);
+  LCD_DBUS1_DDR |= (1 << LCD_DBUS1);
+  LCD_DBUS0_DDR |= (1 << LCD_DBUS0);
 #endif
 #else
   LCD_DBUS_DDR = 0xff; // Reset all LCD_DBUS_PORT pins as outputs
@@ -115,14 +115,25 @@ void writeLCDByte_(uint8_t b) {
   writeLCDNibble_(b);
   writeLCDNibble_(b << 4);
 #elif defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
-  LCD_DBUS7_PORT |= (1 << LCD_DBUS7);
-  LCD_DBUS6_PORT |= (1 << LCD_DBUS6);
-  LCD_DBUS5_PORT |= (1 << LCD_DBUS5);
-  LCD_DBUS4_PORT |= (1 << LCD_DBUS4);
-  LCD_DBUS3_PORT |= (1 << LCD_DBUS3);
-  LCD_DBUS2_PORT |= (1 << LCD_DBUS2);
-  LCD_DBUS1_PORT |= (1 << LCD_DBUS1);
-  LCD_DBUS0_PORT |= (1 << LCD_DBUS0);
+  // Reset data lines to zeros
+  LCD_DBUS7_PORT &= ~(1 << LCD_DBUS7);
+  LCD_DBUS6_PORT &= ~(1 << LCD_DBUS6);
+  LCD_DBUS5_PORT &= ~(1 << LCD_DBUS5);
+  LCD_DBUS4_PORT &= ~(1 << LCD_DBUS4);
+  LCD_DBUS3_PORT &= ~(1 << LCD_DBUS3);
+  LCD_DBUS2_PORT &= ~(1 << LCD_DBUS2);
+  LCD_DBUS1_PORT &= ~(1 << LCD_DBUS1);
+  LCD_DBUS0_PORT &= ~(1 << LCD_DBUS0);
+
+  // Write 1's where appropriate on data lines
+  if (b & (1 << 7)) LCD_DBUS7_PORT |= (1 << LCD_DBUS7);
+  if (b & (1 << 6)) LCD_DBUS6_PORT |= (1 << LCD_DBUS6);
+  if (b & (1 << 5)) LCD_DBUS5_PORT |= (1 << LCD_DBUS5);
+  if (b & (1 << 4)) LCD_DBUS4_PORT |= (1 << LCD_DBUS4);
+  if (b & (1 << 3)) LCD_DBUS3_PORT |= (1 << LCD_DBUS3);
+  if (b & (1 << 2)) LCD_DBUS2_PORT |= (1 << LCD_DBUS2);
+  if (b & (1 << 1)) LCD_DBUS1_PORT |= (1 << LCD_DBUS1);
+  if (b & (1 << 0)) LCD_DBUS0_PORT |= (1 << LCD_DBUS0);
 
   clkLCD();
 #else
@@ -156,8 +167,7 @@ void writeCharToLCD_(char c) {
   writeLCDNibble_(c);
   writeLCDNibble_(c << 4);
 #else
-  LCD_DBUS_PORT = c;
-  clkLCD();
+  writeLCDByte_(c);
 #endif
 }
 
@@ -225,11 +235,17 @@ static inline void disableLCDOutput(void) {
   LCD_RW_DDR &= ~(1 << LCD_RW);
   LCD_ENABLE_DDR &= ~(1 << LCD_ENABLE);
 
-#ifdef FOUR_BIT_MODE
-LCD_DBUS7 &= ~(1 << LCD_DBUS7);
-LCD_DBUS6 &= ~(1 << LCD_DBUS6);
-LCD_DBUS5 &= ~(1 << LCD_DBUS5);
-LCD_DBUS4 &= ~(1 << LCD_DBUS4);
+#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
+  LCD_DBUS7_DDR &= ~(1 << LCD_DBUS7);
+  LCD_DBUS6_DDR &= ~(1 << LCD_DBUS6);
+  LCD_DBUS5_DDR &= ~(1 << LCD_DBUS5);
+  LCD_DBUS4_DDR &= ~(1 << LCD_DBUS4);
+#ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
+  LCD_DBUS3_DDR &= ~(1 << LCD_DBUS3);
+  LCD_DBUS2_DDR &= ~(1 << LCD_DBUS2);
+  LCD_DBUS1_DDR &= ~(1 << LCD_DBUS1);
+  LCD_DBUS0_DDR &= ~(1 << LCD_DBUS0);  
+#endif
 #else
   LCD_DBUS_DDR = 0;
 #endif
