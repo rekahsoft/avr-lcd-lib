@@ -21,43 +21,150 @@
  * Date: Sep 29, 2015
  */
 
+/*
+  Usage
+  =====
+
+  Operates in 3 mutually exclusive modes:
+  1. Default Mode
+     8-bit mode that requires all its data bus lines be on the same PORT.
+  2. EIGHT_BIT_ARBITRARY_PIN_MODE
+     8-bit mode that allows the data bus lines to use any IO pin.
+  3. FOUR_BIT_MODE
+     4-bit mode that allows the data bus lines to use any IO pin.
+ */
+
 // Includes
 #include <avr/io.h>
 
-// LCD data bus PORT, PIN and DDR
+
+/* Modes */
+
+// Default mode: 8-bit data bus
+
+// 8-bit mode with data bus on arbitrary pins
+//#define EIGHT_BIT_ARBITRARY_PIN_MODE
+
+// LCD in 4-bit mode (default is 8 bit mode)
+//#define FOUR_BIT_MODE
+
+// Mode sanity check
+#if defined (EIGHT_BIT_ARBITRARY_PIN_MODE) && defined (FOUR_BIT_MODE)
+#error "EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE are mutually exclusive. Choose one."
+#endif
+
+
+/* All mode options */
+
+#define LCD_RS          PD2
+#define LCD_RS_PORT     PORTD
+#define LCD_RS_DDR      DDRD
+
+#define LCD_RW          PD3
+#define LCD_RW_PORT     PORTD
+#define LCD_RW_DDR      DDRD
+
+#define LCD_ENABLE      PD4
+#define LCD_ENABLE_PORT PORTD
+#define LCD_ENABLE_DDR  DDRD
+
+/* Mode specific settings */
+
+// Default Mode
+// LCD data bus PORT, PIN and DDR.
 #define LCD_DBUS_PORT PORTB
+
 #define LCD_DBUS_DDR  DDRB
 #define LCD_DBUS_PIN  PINB
 
-#define LCD_CTRL_PORT PORTD
-#define LCD_CTRL_DDR  DDRD
-
-#define LCD_RS        PD2
-#define LCD_RW        PD3
-#define LCD_ENABLE    PD4
-
-#define LCD_DBUS0     PB0
-#define LCD_DBUS1     PB1
-#define LCD_DBUS2     PB2
-#define LCD_DBUS3     PB3
-#define LCD_DBUS4     PB4
-#define LCD_DBUS5     PB5
-#define LCD_DBUS6     PB6
-#define LCD_DBUS7     PB7
+// This must be set in default mode to the MSB of the data lines
 #define LCD_BF        PB7
 
-// LCD in 4 bit mode (default is 8 bit mode)
-//#define FOUR_BIT_MODE
 
-// LCD delays (in microseconds when unspecified)
-#define LCD_DELAY               25
-#define LCD_INIT_DELAY0         15    // milliseconds
+// EIGHT_BIT_ARBITRARY_PIN_MODE specific settings
+#ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
+#define LCD_DBUS0      PB0
+#define LCD_DBUS0_PORT PORTB
+#define LCD_DBYS0_DDR  DDRB
+#define LCD_DBUS0_PIN  PINB
+
+#define LCD_DBUS1      PB1
+#define LCD_DBUS1_PORT PORTB
+#define LCD_DBUS1_DDR  DDRB
+#define LCD_DBUS1_PIN  PINB
+
+#define LCD_DBUS2      PB2
+#define LCD_DBUS2_PORT PORTB
+#define LCD_DBUS2_DDR  DDRB
+#define LCD_DBUS2_PIN  PINB
+
+#define LCD_DBUS3      PB3
+#define LCD_DBUS3_PORT PORTB
+#define LCD_DBUS3_DDR  DDRB
+#define LCD_DBUS3_PIN  PINB
+
+#define LCD_DBUS4      PB4
+#define LCD_DBUS4_PORT PORTB
+#define LCD_DBUS4_DDR  DDRB
+#define LCD_DBUS4_PIN  PINB
+
+#define LCD_DBUS5      PB5
+#define LCD_DBUS5_PORT PORTB
+#define LCD_DBUS5_DDR  DDRB
+#define LCD_DBUS5_PIN  PINB
+
+#define LCD_DBUS6      PB6
+#define LCD_DBUS6_PORT PORTB
+#define LCD_DBUS6_DDR  DDRB
+#define LCD_DBUS6_PIN  PINB
+
+#define LCD_DBUS7      PB7
+#define LCD_DBUS7_PORT PORTB
+#define LCD_DBUS7_DDR  DDRB
+#define LCD_DBUS7_PIN  PINB
+#endif
+
+// FOUR_BIT_MODE specific settings
+#ifdef FOUR_BIT_MODE
+#define LCD_DBUS4      PB4
+#define LCD_DBUS4_PORT PORTB
+#define LCD_DBUS4_DDR  DDRB
+#define LCD_DBUS4_PIN  PINB
+
+#define LCD_DBUS5      PB5
+#define LCD_DBUS5_PORT PORTB
+#define LCD_DBUS5_DDR  DDRB
+#define LCD_DBUS5_PIN  PINB
+
+#define LCD_DBUS6      PB6
+#define LCD_DBUS6_PORT PORTB
+#define LCD_DBUS6_DDR  DDRB
+#define LCD_DBUS6_PIN  PINB
+
+#define LCD_DBUS7      PB7
+#define LCD_DBUS7_PORT PORTB
+#define LCD_DBUS7_DDR  DDRB
+#define LCD_DBUS7_PIN  PINB
+#endif
+
+#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
+#undef  LCD_BF
+#define LCD_BF         LCD_DBUS7
+#endif
+
+
+/* LCD delays (in microseconds when unspecified) */
+
+#define LCD_ENABLE_HIGH_DELAY   25
+#define LCD_ENABLE_LOW_DELAY    25
+#define LCD_INIT_DELAY0         15000
 #define LCD_INIT_DELAY1         8200
 #define LCD_INIT_DELAY2         200
 
 #define LCD_CLEAR_DISPLAY_DELAY 16000
 #define LCD_RETURN_HOME_DELAY   16000
 #define LCD_GENERIC_INSTR_DELAY 50
+
 
 /* LCD Commands */
 
@@ -110,15 +217,21 @@ void clkLCD(void);
 
 void loop_until_LCD_BF_clear(void);
 
-void writeLCDInstr_(uint8_t instr);
+#ifdef FOUR_BIT_MODE
+void writeLCDNibble_(uint8_t);
+#endif
 
-void writeLCDInstr(uint8_t instr);
+void writeLCDByte_(uint8_t);
 
-void writeCharToLCD_(char c);
+void writeLCDInstr_(uint8_t);
 
-void writeCharToLCD(char c);
+void writeLCDInstr(uint8_t);
 
-void writeStringToLCD(const char* str);
+void writeCharToLCD_(char);
+
+void writeCharToLCD(char);
+
+void writeStringToLCD(const char*);
 
 void clearDisplay(void);
 

@@ -21,8 +21,6 @@
  * Date: Sep 29, 2015
  */
 
-//#include <avr/interrupt.h>
-//#include <avr/power.h>
 #include <util/delay.h>
 
 // Include header
@@ -42,48 +40,108 @@ void flashLED(uint8_t times) {
 //------------------------------------
 
 void clkLCD(void) {
-  LCD_CTRL_PORT |= 1 << LCD_ENABLE;
-  _delay_us(LCD_DELAY);
-  LCD_CTRL_PORT &= ~(1 << LCD_ENABLE);
-  _delay_us(LCD_DELAY);
+  LCD_ENABLE_PORT |= (1 << LCD_ENABLE);
+  _delay_us(LCD_ENABLE_HIGH_DELAY);
+  LCD_ENABLE_PORT &= ~(1 << LCD_ENABLE);
+  _delay_us(LCD_ENABLE_LOW_DELAY);
 }
 
 void loop_until_LCD_BF_clear(void) {
-  LCD_CTRL_PORT = (LCD_CTRL_PORT & ~(1 << LCD_RS)) | (1 << LCD_RW); // RS=0, RW=1
-  LCD_DBUS_DDR &= ~(1 << LCD_BF); // Set LCD_BF as input
+  LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
+  LCD_RW_PORT |= (1 << LCD_RW);  // RW=1
+
+  // Set LCD_BF as input
+#ifdef FOUR_BIT_MODE
+  LCD_DBUS7_PORT &= ~(1 << LCD_BF);
+#else
+  LCD_DBUS_DDR &= ~(1 << LCD_BF);
+#endif
 
   STATUS_LED_PORT |= 1 << STATUS_LED; // DEBUG
   do {
     clkLCD();
-  } while (bit_is_clear(LCD_DBUS_PIN, LCD_BF));
-  /* loop_until_bit_is_clear(LCD_DBUS_PIN, LCD_BF); */
+  }
+#ifdef FOUR_BIT_MODE
+  while (bit_is_clear(LCD_DBUS7_PIN, LCD_BF));
+  #else
+  while (bit_is_clear(LCD_DBUS_PIN, LCD_BF));
+#endif
   STATUS_LED_PORT &= ~(1 << STATUS_LED); // DEBUG
-    
+
+#ifdef FOUR_BIT_MODE
+  LCD_DBUS7_DDR = 0;
+  LCD_DBUS6_DDR = 0;
+  LCD_DBUS5_DDR = 0;
+  LCD_DBUS4_DDR = 0;
+#else
   LCD_DBUS_DDR = 0xff; // Reset all LCD_DBUS_PORT pins as outputs
+#endif
+}
+
+#ifdef FOUR_BIT_MODE
+/*
+  Writes one nibble to the LCD data bus. Does not touch the RS or RW control lines.
+  Note: the bits that are sent are the four MSBs of the given argument
+ */
+void writeLCDNibble_(uint8_t b) {
+  // Reset data lines to zeros
+  LCD_DBUS7_PORT &= ~(1 << LCD_DBUS7);
+  LCD_DBUS6_PORT &= ~(1 << LCD_DBUS6);
+  LCD_DBUS5_PORT &= ~(1 << LCD_DBUS5);
+  LCD_DBUS4_PORT &= ~(1 << LCD_DBUS4);
+
+  // Write 1's where appropriate on data lines
+  if (b & (1 << 7)) LCD_DBUS7_PORT |= (1 << LCD_DBUS7);
+  if (b & (1 << 6)) LCD_DBUS6_PORT |= (1 << LCD_DBUS6);
+  if (b & (1 << 5)) LCD_DBUS5_PORT |= (1 << LCD_DBUS5);
+  if (b & (1 << 4)) LCD_DBUS4_PORT |= (1 << LCD_DBUS4);
+
+  // Pulse the enable line
+  clkLCD();
+}
+#endif
+
+/*
+  Write a byte to the LCD data bus. Does not touch the RS or RW control lines.
+*/
+void writeLCDByte_(uint8_t b) {
+  LCD_DBUS_PORT = b;
+  clkLCD();
 }
 
 void writeLCDInstr_(uint8_t instr) {
-  LCD_CTRL_PORT &= ~((1 << LCD_RS) | (1 << LCD_RW)); // RS=RW=0
+LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
+LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
+
+#ifdef FOUR_BIT_MODE
+  writeLCDNibble_(instr);
+  writeLCDNibble_(instr << 4);
+#else
   LCD_DBUS_PORT = instr;
   clkLCD();
+#endif
 }
 
 void writeLCDInstr(uint8_t instr) {
   loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
-
   writeLCDInstr_(instr);
 }
 
 void writeCharToLCD_(char c) {
-  LCD_CTRL_PORT |= (1 << LCD_RS);  // RS=1
-  LCD_CTRL_PORT &= ~(1 << LCD_RW); // RW=0
+  LCD_RS_PORT |= (1 << LCD_RS);  // RS=1
+  LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
+
+#ifdef FOUR_BIT_MODE
+  writeLCDNibble_(c);
+  writeLCDNibble_(c << 4);
+#else
   LCD_DBUS_PORT = c;
   clkLCD();
+#endif
 }
 
 void writeCharToLCD(char c) {
   loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
-  
   writeCharToLCD_(c);
 }
 
@@ -96,49 +154,77 @@ void writeStringToLCD(const char* str) {
 
 void clearDisplay(void) {
   writeLCDInstr(CMD_CLEAR_DISPLAY);
-  _delay_us(LCD_CLEAR_DISPLAY_DELAY);
 }
 
 void returnHome(void) {
   writeLCDInstr(CMD_RETURN_HOME);
-  _delay_us(LCD_RETURN_HOME_DELAY);
 }
 
-char readCharFromLCD(void) {
-  loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
+/* char readCharFromLCD(void) { */
+/*   loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions */
 
-  LCD_CTRL_PORT |= (1 << LCD_RW) | (1 << LCD_RW); // RS=RW=1
-  LCD_DBUS_DDR = 0; // Set all LCD_DBUS_PORT pins as inputs
-  clkLCD();
+/*   LCD_CTRL_PORT |= (1 << LCD_RW) | (1 << LCD_RW); // RS=RW=1 */
+/*   LCD_DBUS_DDR = 0; // Set all LCD_DBUS_PORT pins as inputs */
+/*   clkLCD(); */
 
-  char c = LCD_DBUS_PIN;
-  LCD_DBUS_DDR = 0xff; // Reset all LCD_DBUS_PORT pins to outputs
-  return c;
-}
+/*   char c = LCD_DBUS_PIN; */
+/*   LCD_DBUS_DDR = 0xff; // Reset all LCD_DBUS_PORT pins to outputs */
+/*   return c; */
+/* } */
 
 /*
-  Set all pins of LCD_DBUS_PORT, as well as pins LCD_RS, and LCD_RW, on
-  LCD_CTRL_PORT as outputs
+  Set all pins of LCD_DBUS, as well as pins LCD_RS, and LCD_RW as outputs
 */
 static inline void enableLCDOutput(void) {
-  LCD_CTRL_DDR |= (1 << LCD_RS) | (1 << LCD_RW) | (1 << LCD_ENABLE);
+  LCD_RS_DDR |= (1 << LCD_RS);
+  LCD_RW_DDR |= (1 << LCD_RW);
+  LCD_ENABLE_DDR |= (1 << LCD_ENABLE);
+
+#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
+  LCD_DBUS7_DDR |= (1 << LCD_DBUS7);
+  LCD_DBUS6_DDR |= (1 << LCD_DBUS6);
+  LCD_DBUS5_DDR |= (1 << LCD_DBUS5);
+  LCD_DBUS4_DDR |= (1 << LCD_DBUS4);
+#ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
+  LCD_DBUS3_DDR |= (1 << LCD_DBUS3);
+  LCD_DBUS2_DDR |= (1 << LCD_DBUS2);
+  LCD_DBUS1_DDR |= (1 << LCD_DBUS1);
+  LCD_DBUS0_DDR |= (1 << LCD_DBUS0);
+#endif
+#else
   LCD_DBUS_DDR = 0xff;
+#endif
 }
 
 /*
-  Set all pins of LCD_DBUS_PORT as well as LCD_RS, and LCD_RW on LCD_CTRL_PORT as
-  inputs (disabling their output)
+  Set all pins of LCD_DBUS as well as LCD_RS, and LCD_RW as inputs (disabling their output)
 */
 static inline void disableLCDOutput(void) {
-  LCD_CTRL_DDR &= ~((1 << LCD_RS) | (1 << LCD_RW) | (1 << LCD_ENABLE));
+  LCD_RS_DDR &= ~(1 << LCD_RS);
+  LCD_RW_DDR &= ~(1 << LCD_RW);
+  LCD_ENABLE_DDR &= ~(1 << LCD_ENABLE);
+
+#ifdef FOUR_BIT_MODE
+LCD_DBUS7 &= ~(1 << LCD_DBUS7);
+LCD_DBUS6 &= ~(1 << LCD_DBUS6);
+LCD_DBUS5 &= ~(1 << LCD_DBUS5);
+LCD_DBUS4 &= ~(1 << LCD_DBUS4);
+#else
   LCD_DBUS_DDR = 0;
+#endif
 }
 
 static inline void softwareLCDInitPulse(void) {
   enableLCDOutput();
-  LCD_CTRL_PORT &= ~((1 << LCD_RS) | (1 << LCD_RW)); // RS=RW=0
+  LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
+  LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
+
+#ifdef FOUR_BIT_MODE
+  writeLCDNibble_(CMD_INIT);
+#else
   LCD_DBUS_PORT = CMD_INIT;
   clkLCD();
+#endif
 }
 
 /*
@@ -148,7 +234,7 @@ void initLCD (void) {
   enableLCDOutput();
 
   // Wait minimum 15ms as per datasheet
-  _delay_ms(LCD_INIT_DELAY0);
+  _delay_us(LCD_INIT_DELAY0);
 
   softwareLCDInitPulse();
   
