@@ -276,8 +276,8 @@ void initLCD (void) {
   _delay_us(LCD_INIT_DELAY2); // Wait minimum 100us as per datasheet
   softwareLCDInitPulse();
 
-#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
-  // Function Set (4-bit interface; 2 liens with 5x7 dot character font)
+#if defined (FOUR_BIT_MODE)
+  // Function Set (4-bit interface; 2 lines with 5x7 dot character font)
   writeLCDNibble_(CMD_INIT_FOUR_BIT);
   writeLCDInstr_(CMD_INIT_FOUR_BIT | (1 << INSTR_FUNC_SET_N));
 #else
