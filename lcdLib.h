@@ -46,7 +46,7 @@
 //#define EIGHT_BIT_ARBITRARY_PIN_MODE
 
 // LCD in 4-bit mode (default is 8 bit mode)
-#define FOUR_BIT_MODE
+//#define FOUR_BIT_MODE
 
 // Mode sanity check
 #if defined (EIGHT_BIT_ARBITRARY_PIN_MODE) && defined (FOUR_BIT_MODE)
