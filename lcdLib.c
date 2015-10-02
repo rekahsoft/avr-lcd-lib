@@ -307,9 +307,19 @@ void initLCD (void) {
   flashLED(5); // DEBUG
 }
 
+/*
+  Initialize LCD using the internal reset circuitry.
+
+  Note: This currently only works with 8 bit modes, but is not recommended. Instead use the
+        initLCD function which uses the software initialization method and works for 8-bit
+        modes as well the 4-bit mode.
+ */
 void initLCDByInternalReset(void) {
   enableLCDOutput();
+
+  // Function set (8-bit interface; 2 lines with 5x7 dot character font)
   writeLCDInstr_(INSTR_FUNC_SET | (1 << INSTR_FUNC_SET_DL) | (1 << INSTR_FUNC_SET_N));
+
   writeLCDInstr_(0x0F);
   writeLCDInstr_(0x06);
   writeLCDInstr_(CMD_CLEAR_DISPLAY);
