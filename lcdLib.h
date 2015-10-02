@@ -46,7 +46,7 @@
 //#define EIGHT_BIT_ARBITRARY_PIN_MODE
 
 // LCD in 4-bit mode (default is 8 bit mode)
-//#define FOUR_BIT_MODE
+#define FOUR_BIT_MODE
 
 // Mode sanity check
 #if defined (EIGHT_BIT_ARBITRARY_PIN_MODE) && defined (FOUR_BIT_MODE)
@@ -68,9 +68,18 @@
 #define LCD_ENABLE_PORT PORTD
 #define LCD_ENABLE_DDR  DDRD
 
-/* Mode specific settings */
+// Screen characteristics (unused) TODO
+#define LCD_NUMBER_OF_LINES     2
+#define LCD_CHARACTERS_PER_LINE 20
 
-// Default Mode
+#define LCD_CHARACTER_FONT  
+
+/*
+  Mode specific settings
+*/
+
+/* Default Mode */
+
 // LCD data bus PORT, PIN and DDR.
 #define LCD_DBUS_PORT PORTB
 
@@ -81,7 +90,8 @@
 #define LCD_BF        PB7
 
 
-// EIGHT_BIT_ARBITRARY_PIN_MODE specific settings
+/* EIGHT_BIT_ARBITRARY_PIN_MODE specific settings */
+
 #ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
 #define LCD_DBUS0      PB0
 #define LCD_DBUS0_PORT PORTB
@@ -124,7 +134,8 @@
 #define LCD_DBUS7_PIN  PINB
 #endif
 
-// FOUR_BIT_MODE specific settings
+/* FOUR_BIT_MODE specific settings */
+
 #ifdef FOUR_BIT_MODE
 #define LCD_DBUS4      PB4
 #define LCD_DBUS4_PORT PORTB
@@ -170,6 +181,7 @@
 
 // Simple commands with no options
 #define CMD_INIT             0x30
+#define CMD_INIT_FOUR_BIT    0x20
 #define CMD_CLEAR_DISPLAY    0x01
 #define CMD_RETURN_HOME      0x02
 

@@ -269,24 +269,22 @@ static inline void softwareLCDInitPulse(void) {
 void initLCD (void) {
   enableLCDOutput();
 
-  // Wait minimum 15ms as per datasheet
-  _delay_us(LCD_INIT_DELAY0);
-
+  _delay_us(LCD_INIT_DELAY0); // Wait minimum 15ms as per datasheet
   softwareLCDInitPulse();
-  
-  // Wait minimum 4.1ms as per datasheet
-  _delay_us(LCD_INIT_DELAY1);
-
+  _delay_us(LCD_INIT_DELAY1); // Wait minimum 4.1ms as per datasheet
+  softwareLCDInitPulse();
+  _delay_us(LCD_INIT_DELAY2); // Wait minimum 100us as per datasheet
   softwareLCDInitPulse();
 
-  // Wait minimum 100us as per datasheet
-  _delay_us(LCD_INIT_DELAY2);
-
-  softwareLCDInitPulse();
-
-  // Function set (2 lines with 5x7 dot character font)
+#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
+  // Function Set (4-bit interface; 2 liens with 5x7 dot character font)
+  writeLCDNibble_(CMD_INIT_FOUR_BIT);
+  writeLCDInstr_(CMD_INIT_FOUR_BIT | (1 << INSTR_FUNC_SET_N));
+#else
+  // Function set (8-bit interface; 2 lines with 5x7 dot character font)
   // RS=RW=0, DBUS=b00111000,0x38
   writeLCDInstr_(INSTR_FUNC_SET | (1 << INSTR_FUNC_SET_DL) | (1 << INSTR_FUNC_SET_N));
+#endif
 
   /* BF now can be checked */
 
