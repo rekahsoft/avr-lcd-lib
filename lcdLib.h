@@ -46,7 +46,7 @@
 //#define EIGHT_BIT_ARBITRARY_PIN_MODE
 
 // LCD in 4-bit mode (default is 8 bit mode)
-//#define FOUR_BIT_MODE
+#define FOUR_BIT_MODE
 
 // Mode sanity check
 #if defined (EIGHT_BIT_ARBITRARY_PIN_MODE) && defined (FOUR_BIT_MODE)
@@ -112,31 +112,11 @@
 #define LCD_DBUS3_PORT PORTB
 #define LCD_DBUS3_DDR  DDRB
 #define LCD_DBUS3_PIN  PINB
-
-#define LCD_DBUS4      PB4
-#define LCD_DBUS4_PORT PORTB
-#define LCD_DBUS4_DDR  DDRB
-#define LCD_DBUS4_PIN  PINB
-
-#define LCD_DBUS5      PB5
-#define LCD_DBUS5_PORT PORTB
-#define LCD_DBUS5_DDR  DDRB
-#define LCD_DBUS5_PIN  PINB
-
-#define LCD_DBUS6      PB6
-#define LCD_DBUS6_PORT PORTB
-#define LCD_DBUS6_DDR  DDRB
-#define LCD_DBUS6_PIN  PINB
-
-#define LCD_DBUS7      PB7
-#define LCD_DBUS7_PORT PORTB
-#define LCD_DBUS7_DDR  DDRB
-#define LCD_DBUS7_PIN  PINB
 #endif
 
-/* FOUR_BIT_MODE specific settings */
+/* FOUR_BIT_MODE and EIGHT_BIT_ARBITRARY_PIN_MODE shared settings */
 
-#ifdef FOUR_BIT_MODE
+#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
 #define LCD_DBUS4      PB4
 #define LCD_DBUS4_PORT PORTB
 #define LCD_DBUS4_DDR  DDRB
