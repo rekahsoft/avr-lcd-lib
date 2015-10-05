@@ -34,8 +34,20 @@
      4-bit mode that allows the data bus lines to use any IO pin.
  */
 
-// Includes
+// Includes -------------------------------------------------------------------------------
+
 #include <avr/io.h>
+
+//------------------------------------------------------------------------------------------
+
+/*
+  Screen characteristics (unused) TODO
+*/
+
+#define LCD_NUMBER_OF_LINES     2
+#define LCD_CHARACTERS_PER_LINE 20
+
+#define LCD_CHARACTER_FONT
 
 
 /* Modes */
@@ -67,12 +79,6 @@
 #define LCD_ENABLE      PD4
 #define LCD_ENABLE_PORT PORTD
 #define LCD_ENABLE_DDR  DDRD
-
-// Screen characteristics (unused) TODO
-#define LCD_NUMBER_OF_LINES     2
-#define LCD_CHARACTERS_PER_LINE 20
-
-#define LCD_CHARACTER_FONT  
 
 /*
   Mode specific settings
