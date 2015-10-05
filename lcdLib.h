@@ -21,146 +21,51 @@
  * Date: Sep 29, 2015
  */
 
-/*
-  Usage
-  =====
-
-  Operates in 3 mutually exclusive modes:
-  1. Default Mode
-     8-bit mode that requires all its data bus lines be on the same PORT.
-  2. EIGHT_BIT_ARBITRARY_PIN_MODE
-     8-bit mode that allows the data bus lines to use any IO pin.
-  3. FOUR_BIT_MODE
-     4-bit mode that allows the data bus lines to use any IO pin.
- */
-
 // Includes -------------------------------------------------------------------------------
 
 #include <avr/io.h>
+#include "lcdLibConfig.h"
 
 //------------------------------------------------------------------------------------------
 
-/*
-  Screen characteristics (unused) TODO
-*/
+/* Mode and settings sanity check */
 
-#define LCD_NUMBER_OF_LINES     2
-#define LCD_CHARACTERS_PER_LINE 20
+#if !defined (LCD_RS) || !defined (LCD_RS_PORT) || !defined (LCD_RS_DDR) || !defined (LCD_RW) || !defined (LCD_RW_PORT) || !defined (LCD_RW_DDR) || !defined (LCD_ENABLE) || !defined (LCD_ENABLE_PORT) || !defined (LCD_ENABLE_DDR)
+#error "All modes require LCD_RS[,_PORT,_DDR], LCD_RW[,_PORT,_DDR], and LCD_ENABLE[,_PORT,_DDR] be defined."
+#endif
 
-#define LCD_CHARACTER_FONT
-
-
-/* Modes */
-
-// Default mode: 8-bit data bus
-
-// 8-bit mode with data bus on arbitrary pins
-//#define EIGHT_BIT_ARBITRARY_PIN_MODE
-
-// LCD in 4-bit mode (default is 8 bit mode)
-//#define FOUR_BIT_MODE
-
-// Mode sanity check
 #if defined (EIGHT_BIT_ARBITRARY_PIN_MODE) && defined (FOUR_BIT_MODE)
 #error "EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE are mutually exclusive. Choose one."
-#endif
+#elif defined (EIGHT_BIT_ARBITRARY_PIN_MODE) || defined (FOUR_BIT_MODE)
 
-
-/* All mode options */
-
-#define LCD_RS          PD2
-#define LCD_RS_PORT     PORTD
-#define LCD_RS_DDR      DDRD
-
-#define LCD_RW          PD3
-#define LCD_RW_PORT     PORTD
-#define LCD_RW_DDR      DDRD
-
-#define LCD_ENABLE      PD4
-#define LCD_ENABLE_PORT PORTD
-#define LCD_ENABLE_DDR  DDRD
-
-/*
-  Mode specific settings
-*/
-
-/* Default Mode */
-
-// LCD data bus PORT, PIN and DDR.
-#define LCD_DBUS_PORT PORTB
-
-#define LCD_DBUS_DDR  DDRB
-#define LCD_DBUS_PIN  PINB
-
-// This must be set in default mode to the MSB of the data lines
-#define LCD_BF        PB7
-
-
-/* EIGHT_BIT_ARBITRARY_PIN_MODE specific settings */
-
+// EIGHT_BIT_ARBITRARY_PIN_MODE specific requirements
 #ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
-#define LCD_DBUS0      PB0
-#define LCD_DBUS0_PORT PORTB
-#define LCD_DBUS0_DDR  DDRB
-#define LCD_DBUS0_PIN  PINB
-
-#define LCD_DBUS1      PB1
-#define LCD_DBUS1_PORT PORTB
-#define LCD_DBUS1_DDR  DDRB
-#define LCD_DBUS1_PIN  PINB
-
-#define LCD_DBUS2      PB2
-#define LCD_DBUS2_PORT PORTB
-#define LCD_DBUS2_DDR  DDRB
-#define LCD_DBUS2_PIN  PINB
-
-#define LCD_DBUS3      PB3
-#define LCD_DBUS3_PORT PORTB
-#define LCD_DBUS3_DDR  DDRB
-#define LCD_DBUS3_PIN  PINB
+#if !defined (LCD_DBUS0) || !defined (LCD_DBUS0_PORT) || !defined (LCD_DBUS0_DDR) || !defined (LCD_DBUS0_PIN) || !defined (LCD_DBUS1) || !defined (LCD_DBUS1_PORT) || !defined (LCD_DBUS1_DDR) || !defined (LCD_DBUS1_PIN) || !defined (LCD_DBUS2) || !defined (LCD_DBUS2_PORT) || !defined (LCD_DBUS2_DDR) || !defined (LCD_DBUS2_PIN) || !defined (LCD_DBUS3) || !defined (LCD_DBUS3_PORT) || !defined (LCD_DBUS3_DDR) || !defined (LCD_DBUS3_PIN)
+#error "EIGHT_BIT_ARBITRARY_PIN_MODE require that LCD_DBUS*[,_PORT,_DDR,_PIN] be defined."
+#endif
 #endif
 
-/* FOUR_BIT_MODE and EIGHT_BIT_ARBITRARY_PIN_MODE shared settings */
-
-#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
-#define LCD_DBUS4      PB4
-#define LCD_DBUS4_PORT PORTB
-#define LCD_DBUS4_DDR  DDRB
-#define LCD_DBUS4_PIN  PINB
-
-#define LCD_DBUS5      PB5
-#define LCD_DBUS5_PORT PORTB
-#define LCD_DBUS5_DDR  DDRB
-#define LCD_DBUS5_PIN  PINB
-
-#define LCD_DBUS6      PB6
-#define LCD_DBUS6_PORT PORTB
-#define LCD_DBUS6_DDR  DDRB
-#define LCD_DBUS6_PIN  PINB
-
-#define LCD_DBUS7      PB7
-#define LCD_DBUS7_PORT PORTB
-#define LCD_DBUS7_DDR  DDRB
-#define LCD_DBUS7_PIN  PINB
+// Requirements for EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE
+#if !defined (LCD_DBUS4) || !defined (LCD_DBUS4_PORT) || !defined (LCD_DBUS4_DDR) || !defined (LCD_DBUS4_PIN) || !defined (LCD_DBUS5) || !defined (LCD_DBUS5_PORT) || !defined (LCD_DBUS5_DDR) || !defined (LCD_DBUS5_PIN) || !defined (LCD_DBUS6) || !defined (LCD_DBUS6_PORT) || !defined (LCD_DBUS6_DDR) || !defined (LCD_DBUS6_PIN) || !defined (LCD_DBUS7) || !defined (LCD_DBUS7_PORT) || !defined (LCD_DBUS7_DDR) || !defined (LCD_DBUS7_PIN)
+#error "Both EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE require that LCD_DBUS*[,_PORT,_DDR,_PIN] be defined."
 #endif
 
-#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
+// Set LCD_BF automatically for both EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE
 #undef  LCD_BF
 #define LCD_BF         LCD_DBUS7
+
+#else
+#if !defined (LCD_DBUS_PORT) || !defined (LCD_DBUS_DDR) || !defined (LCD_DBUS_PIN) || !defined (LCD_BF)
+#error "Default mode requires that LCD_DBUS_[PORT,DDR,PIN] and LCD_BF be defined."
 #endif
 
-
-/* LCD delays (in microseconds when unspecified) */
-
-#define LCD_ENABLE_HIGH_DELAY   25
-#define LCD_ENABLE_LOW_DELAY    25
-#define LCD_INIT_DELAY0         15000
-#define LCD_INIT_DELAY1         8200
-#define LCD_INIT_DELAY2         200
-
-#define LCD_CLEAR_DISPLAY_DELAY 16000
-#define LCD_RETURN_HOME_DELAY   16000
-#define LCD_GENERIC_INSTR_DELAY 50
+#undef  LCD_DBUS7_PORT
+#define LCD_DBUS7_PORT LCD_DBUS_PORT
+#undef  LCD_DBUS7_DDR
+#define LCD_DBUS7_DDR  LCD_DBUS_DDR
+#undef  LCD_DBUS7_PIN
+#define LCD_DBUS7_PIN  LCD_DBUS_PIN
+#endif
 
 
 /* LCD Commands */

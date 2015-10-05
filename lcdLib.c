@@ -51,21 +51,12 @@ void loop_until_LCD_BF_clear(void) {
   LCD_RW_PORT |= (1 << LCD_RW);  // RW=1
 
   // Set LCD_BF as input
-#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
   LCD_DBUS7_DDR &= ~(1 << LCD_BF);
-#else
-  LCD_DBUS_DDR &= ~(1 << LCD_BF);
-#endif
 
   STATUS_LED_PORT |= 1 << STATUS_LED; // DEBUG
   do {
     clkLCD();
-  }
-#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
-  while (bit_is_clear(LCD_DBUS7_PIN, LCD_BF));
-#else
-  while (bit_is_clear(LCD_DBUS_PIN, LCD_BF));
-#endif
+  } while (bit_is_clear(LCD_DBUS7_PIN, LCD_BF));
   STATUS_LED_PORT &= ~(1 << STATUS_LED); // DEBUG
 
 #if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
