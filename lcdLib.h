@@ -28,46 +28,6 @@
 
 //------------------------------------------------------------------------------------------
 
-/* Mode and settings sanity check */
-
-#if !defined (LCD_RS) || !defined (LCD_RS_PORT) || !defined (LCD_RS_DDR) || !defined (LCD_RW) || !defined (LCD_RW_PORT) || !defined (LCD_RW_DDR) || !defined (LCD_ENABLE) || !defined (LCD_ENABLE_PORT) || !defined (LCD_ENABLE_DDR)
-#error "All modes require LCD_RS[,_PORT,_DDR], LCD_RW[,_PORT,_DDR], and LCD_ENABLE[,_PORT,_DDR] be defined."
-#endif
-
-#if defined (EIGHT_BIT_ARBITRARY_PIN_MODE) && defined (FOUR_BIT_MODE)
-#error "EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE are mutually exclusive. Choose one."
-#elif defined (EIGHT_BIT_ARBITRARY_PIN_MODE) || defined (FOUR_BIT_MODE)
-
-// EIGHT_BIT_ARBITRARY_PIN_MODE specific requirements
-#ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
-#if !defined (LCD_DBUS0) || !defined (LCD_DBUS0_PORT) || !defined (LCD_DBUS0_DDR) || !defined (LCD_DBUS0_PIN) || !defined (LCD_DBUS1) || !defined (LCD_DBUS1_PORT) || !defined (LCD_DBUS1_DDR) || !defined (LCD_DBUS1_PIN) || !defined (LCD_DBUS2) || !defined (LCD_DBUS2_PORT) || !defined (LCD_DBUS2_DDR) || !defined (LCD_DBUS2_PIN) || !defined (LCD_DBUS3) || !defined (LCD_DBUS3_PORT) || !defined (LCD_DBUS3_DDR) || !defined (LCD_DBUS3_PIN)
-#error "EIGHT_BIT_ARBITRARY_PIN_MODE require that LCD_DBUS*[,_PORT,_DDR,_PIN] be defined."
-#endif
-#endif
-
-// Requirements for EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE
-#if !defined (LCD_DBUS4) || !defined (LCD_DBUS4_PORT) || !defined (LCD_DBUS4_DDR) || !defined (LCD_DBUS4_PIN) || !defined (LCD_DBUS5) || !defined (LCD_DBUS5_PORT) || !defined (LCD_DBUS5_DDR) || !defined (LCD_DBUS5_PIN) || !defined (LCD_DBUS6) || !defined (LCD_DBUS6_PORT) || !defined (LCD_DBUS6_DDR) || !defined (LCD_DBUS6_PIN) || !defined (LCD_DBUS7) || !defined (LCD_DBUS7_PORT) || !defined (LCD_DBUS7_DDR) || !defined (LCD_DBUS7_PIN)
-#error "Both EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE require that LCD_DBUS*[,_PORT,_DDR,_PIN] be defined."
-#endif
-
-// Set LCD_BF automatically for both EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE
-#undef  LCD_BF
-#define LCD_BF         LCD_DBUS7
-
-#else
-#if !defined (LCD_DBUS_PORT) || !defined (LCD_DBUS_DDR) || !defined (LCD_DBUS_PIN) || !defined (LCD_BF)
-#error "Default mode requires that LCD_DBUS_[PORT,DDR,PIN] and LCD_BF be defined."
-#endif
-
-#undef  LCD_DBUS7_PORT
-#define LCD_DBUS7_PORT LCD_DBUS_PORT
-#undef  LCD_DBUS7_DDR
-#define LCD_DBUS7_DDR  LCD_DBUS_DDR
-#undef  LCD_DBUS7_PIN
-#define LCD_DBUS7_PIN  LCD_DBUS_PIN
-#endif
-
-
 /* LCD Commands */
 
 // Simple commands with no options
@@ -149,3 +109,44 @@ void initLCD(void);
 
 void initLCDByInternalReset(void);
 
+
+/*
+  Mode and settings sanity check
+*/
+
+#if !defined (LCD_RS) || !defined (LCD_RS_PORT) || !defined (LCD_RS_DDR) || !defined (LCD_RW) || !defined (LCD_RW_PORT) || !defined (LCD_RW_DDR) || !defined (LCD_ENABLE) || !defined (LCD_ENABLE_PORT) || !defined (LCD_ENABLE_DDR)
+#error "All modes require LCD_RS[,_PORT,_DDR], LCD_RW[,_PORT,_DDR], and LCD_ENABLE[,_PORT,_DDR] be defined."
+#endif
+
+#if defined (EIGHT_BIT_ARBITRARY_PIN_MODE) && defined (FOUR_BIT_MODE)
+#error "EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE are mutually exclusive. Choose one."
+#elif defined (EIGHT_BIT_ARBITRARY_PIN_MODE) || defined (FOUR_BIT_MODE)
+
+// EIGHT_BIT_ARBITRARY_PIN_MODE specific requirements
+#ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
+#if !defined (LCD_DBUS0) || !defined (LCD_DBUS0_PORT) || !defined (LCD_DBUS0_DDR) || !defined (LCD_DBUS0_PIN) || !defined (LCD_DBUS1) || !defined (LCD_DBUS1_PORT) || !defined (LCD_DBUS1_DDR) || !defined (LCD_DBUS1_PIN) || !defined (LCD_DBUS2) || !defined (LCD_DBUS2_PORT) || !defined (LCD_DBUS2_DDR) || !defined (LCD_DBUS2_PIN) || !defined (LCD_DBUS3) || !defined (LCD_DBUS3_PORT) || !defined (LCD_DBUS3_DDR) || !defined (LCD_DBUS3_PIN)
+#error "EIGHT_BIT_ARBITRARY_PIN_MODE require that LCD_DBUS*[,_PORT,_DDR,_PIN] be defined."
+#endif
+#endif
+
+// Requirements for EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE
+#if !defined (LCD_DBUS4) || !defined (LCD_DBUS4_PORT) || !defined (LCD_DBUS4_DDR) || !defined (LCD_DBUS4_PIN) || !defined (LCD_DBUS5) || !defined (LCD_DBUS5_PORT) || !defined (LCD_DBUS5_DDR) || !defined (LCD_DBUS5_PIN) || !defined (LCD_DBUS6) || !defined (LCD_DBUS6_PORT) || !defined (LCD_DBUS6_DDR) || !defined (LCD_DBUS6_PIN) || !defined (LCD_DBUS7) || !defined (LCD_DBUS7_PORT) || !defined (LCD_DBUS7_DDR) || !defined (LCD_DBUS7_PIN)
+#error "Both EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE require that LCD_DBUS*[,_PORT,_DDR,_PIN] be defined."
+#endif
+
+// Set LCD_BF automatically for both EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE
+#undef  LCD_BF
+#define LCD_BF         LCD_DBUS7
+
+#else
+#if !defined (LCD_DBUS_PORT) || !defined (LCD_DBUS_DDR) || !defined (LCD_DBUS_PIN) || !defined (LCD_BF)
+#error "Default mode requires that LCD_DBUS_[PORT,DDR,PIN] and LCD_BF be defined."
+#endif
+
+#undef  LCD_DBUS7_PORT
+#define LCD_DBUS7_PORT LCD_DBUS_PORT
+#undef  LCD_DBUS7_DDR
+#define LCD_DBUS7_DDR  LCD_DBUS_DDR
+#undef  LCD_DBUS7_PIN
+#define LCD_DBUS7_PIN  LCD_DBUS_PIN
+#endif
