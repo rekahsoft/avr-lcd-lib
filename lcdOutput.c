@@ -63,6 +63,7 @@ int main(void) {
   while (1) {
     serialChar = receiveByte();
     writeCharToLCD(serialChar);
+    transmitByte(serialChar);   // Echo character back to serial console
   }
 
   return 0;

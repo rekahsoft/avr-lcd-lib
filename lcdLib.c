@@ -187,36 +187,47 @@ void writeCharToLCD_(char c) {
 }
 
 void writeCharToLCD(char c) {
-  loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
-  writeCharToLCD_(c);
-}
-
-void writeStringToLCD(const char* str) {
-  while (*str != '\0') {
-    switch (*str) {
-    case '\n': // Go to next line on screen
+  switch (c) {
+  case '\n': // Line feed
+    if (currentLineNum == LCD_NUMBER_OF_LINES - 1) {
+      clearDisplay();
+    } else {
+      writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[++currentLineNum]);
+      currentLineChars = 0;
+    }
+    break;
+    ;
+  case '\a': // Alarm
+    break;
+    ;
+  case '\b': // Backspace
+    break;
+    ;
+  case '\r': // Carriage return
+    writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[currentLineNum]);
+    currentLineChars = 0;
+    break;
+    ;
+  default:
+    if (currentLineChars == LCD_CHARACTERS_PER_LINE) {
       if (currentLineNum == LCD_NUMBER_OF_LINES - 1) {
         clearDisplay();
       } else {
         writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[++currentLineNum]);
         currentLineChars = 0;
       }
-      break;
-      ;
-    default:
-      if (currentLineChars == LCD_CHARACTERS_PER_LINE) {
-        if (currentLineNum == LCD_NUMBER_OF_LINES - 1) {
-          clearDisplay();
-        } else {
-          writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[++currentLineNum]);
-          currentLineChars = 0;
-        }
-      }
-      writeCharToLCD(*str);
-      currentLineChars++;
-      ;
     }
 
+    loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
+    writeCharToLCD_(c);
+    currentLineChars++;
+    ;
+  }
+}
+
+void writeStringToLCD(const char* str) {
+  while (*str != '\0') {
+    writeCharToLCD(*str);
     str++;
   }
 }
