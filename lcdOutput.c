@@ -31,27 +31,38 @@
 #include <util/delay.h>
 
 #include "lcdLib.h"
+#include "USART.h"
+
+void showSomePrases(void) {
+  const char* data[4] = { "Hello there friend!!\nIsn't it a nice day.\nAnyways, I must go..\nTo a midnight show;)",
+                          "This is some other text. It should be wrapped appropriately.\nIsn't that neat!",
+                          "Welcome! (line 1)\nThis is line 2.\nAnd here is line 3.\nAnd finally, line 4.",
+                          "Finally, this is the\nend; of the array,\nthat is.\nCheers."};
+
+  for (uint8_t i = 0; i < 4; i++) {
+    writeStringToLCD(data[i]);
+    _delay_ms(5000);
+    clearDisplay();
+  }
+  _delay_ms(3000);
+}
 
 int main(void) {
   clock_prescale_set(clock_div_1);
   
   STATUS_LED_DDR |= 1 << STATUS_LED; // DEBUG
 
-  const char* data[4] = { "Hello there friend!!\nIsn't it a nice day.\nAnyways, I must go..\nTo a midnight show;)",
-                          "This is some other text. It should be wrapped appropriately.\nIsn't that neat!",
-                          "Welcome! (line 1)\nThis is line 2.\nAnd here is line 3.\nAnd finally, line 4.",
-                          "Finally, this is the\nend; of the array,\nthat is.\nCheers."};
+  initUSART();
+  char serialChar;
 
   initLCD();
   //initLCDByInternalReset();
-  
+
+  showSomePrases();
+
   while (1) {
-    for (uint8_t i = 0; i < 4; i++) {
-      writeStringToLCD(data[i]);
-      _delay_ms(10000);
-      clearDisplay();
-    }
-    _delay_ms(3000);
+    serialChar = receiveByte();
+    writeCharToLCD(serialChar);
   }
 
   return 0;
