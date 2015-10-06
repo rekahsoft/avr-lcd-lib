@@ -59,7 +59,7 @@
 //#define EIGHT_BIT_ARBITRARY_PIN_MODE
 
 // LCD in 4-bit mode (on arbitrary pins)
-//#define FOUR_BIT_MODE
+#define FOUR_BIT_MODE
 
 /* All mode options */
 

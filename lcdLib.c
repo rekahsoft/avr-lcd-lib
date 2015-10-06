@@ -55,6 +55,8 @@ void clkLCD(void) {
 }
 
 void loop_until_LCD_BF_clear(void) {
+  uint8_t bf;
+
   LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
   LCD_RW_PORT |= (1 << LCD_RW);  // RW=1
 
@@ -63,8 +65,22 @@ void loop_until_LCD_BF_clear(void) {
 
   STATUS_LED_PORT |= 1 << STATUS_LED; // DEBUG
   do {
-    clkLCD();
-  } while (bit_is_clear(LCD_DBUS7_PIN, LCD_BF));
+    bf = 0;
+    LCD_ENABLE_PORT |= (1 << LCD_ENABLE);
+    _delay_us(1);                          // 'delay data time' and 'enable pulse width'
+
+    bf |= (LCD_DBUS7_PIN & (1 << LCD_BF));
+
+    LCD_ENABLE_PORT &= ~(1 << LCD_ENABLE);
+    _delay_us(1);                          // 'address hold time', 'data hold time' and 'enable cycle width'
+
+#ifdef FOUR_BIT_MODE
+    LCD_ENABLE_PORT |= (1 << LCD_ENABLE);
+    _delay_us(1);                          // 'delay data time' and 'enable pulse width'
+    LCD_ENABLE_PORT &= ~(1 << LCD_ENABLE);
+    _delay_us(1);                          // 'address hold time', 'data hold time' and 'enable cycle width'
+#endif
+  } while (bf);
   STATUS_LED_PORT &= ~(1 << STATUS_LED); // DEBUG
 
 #if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
@@ -207,7 +223,6 @@ void writeStringToLCD(const char* str) {
 
 void clearDisplay(void) {
   writeLCDInstr(CMD_CLEAR_DISPLAY);
-  _delay_us(LCD_CLEAR_DISPLAY_DELAY);
 
   // Reset line and char number tracking
   currentLineNum   = 0;
@@ -216,7 +231,6 @@ void clearDisplay(void) {
 
 void returnHome(void) {
   writeLCDInstr(CMD_RETURN_HOME);
-  _delay_us(LCD_RETURN_HOME_DELAY);
 
   // Reset line and char number tracking
   currentLineNum   = 0;
