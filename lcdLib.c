@@ -26,6 +26,14 @@
 // Include header
 #include "lcdLib.h"
 
+// Globals
+volatile uint8_t currentLineNum   = 0;
+volatile uint8_t currentLineChars = 0;
+
+const uint8_t lineBeginnings[LCD_NUMBER_OF_LINES] = { LCD_LINE_BEGINNINGS };
+
+//------------------------------------------------------------------------------------------
+
 // Function definitions
 void flashLED(uint8_t times) {
   while (times > 0) {
@@ -169,17 +177,50 @@ void writeCharToLCD(char c) {
 
 void writeStringToLCD(const char* str) {
   while (*str != '\0') {
-    writeCharToLCD(*str);
+    switch (*str) {
+    case '\n': // Go to next line on screen
+      if (currentLineNum == LCD_NUMBER_OF_LINES - 1) {
+        clearDisplay();
+      } else {
+        writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[++currentLineNum]);
+        currentLineChars = 0;
+      }
+      break;
+      ;
+    default:
+      if (currentLineChars == LCD_CHARACTERS_PER_LINE) {
+        if (currentLineNum == LCD_NUMBER_OF_LINES - 1) {
+          clearDisplay();
+        } else {
+          writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[++currentLineNum]);
+          currentLineChars = 0;
+        }
+      }
+      writeCharToLCD(*str);
+      currentLineChars++;
+      ;
+    }
+
     str++;
   }
 }
 
 void clearDisplay(void) {
   writeLCDInstr(CMD_CLEAR_DISPLAY);
+  _delay_us(LCD_CLEAR_DISPLAY_DELAY);
+
+  // Reset line and char number tracking
+  currentLineNum   = 0;
+  currentLineChars = 0;
 }
 
 void returnHome(void) {
   writeLCDInstr(CMD_RETURN_HOME);
+  _delay_us(LCD_RETURN_HOME_DELAY);
+
+  // Reset line and char number tracking
+  currentLineNum   = 0;
+  currentLineChars = 0;
 }
 
 /* char readCharFromLCD(void) { */

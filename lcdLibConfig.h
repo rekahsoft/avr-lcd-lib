@@ -41,14 +41,15 @@
 */
 
 /*
-  Screen characteristics (unused) TODO
+  Screen characteristics
 */
 
-#define LCD_NUMBER_OF_LINES     2
 #define LCD_CHARACTERS_PER_LINE 20
-
-#define LCD_CHARACTER_FONT
-
+#define LCD_LINE_BEGINNINGS     0x00, \
+                                0x40, \
+                                0x14, \
+                                0x54
+#define LCD_NUMBER_OF_LINES     4
 
 /* Modes */
 

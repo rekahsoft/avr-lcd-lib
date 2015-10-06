@@ -37,10 +37,10 @@ int main(void) {
   
   STATUS_LED_DDR |= 1 << STATUS_LED; // DEBUG
 
-  const char* data[4] = { "Hello there friend!!",
-                          "Anyways, I must go..",
-                          "Isn't it a nice day.",
-                          "To a midnight show;)"  };
+  const char* data[4] = { "Hello there friend!!\nIsn't it a nice day.\nAnyways, I must go..\nTo a midnight show;)",
+                          "This is some other text. It should be wrapped appropriately.\nIsn't that neat!",
+                          "Welcome! (line 1)\nThis is line 2.\nAnd here is line 3.\nAnd finally, line 4.",
+                          "Finally, this is the\nend; of the array,\nthat is.\nCheers."};
 
   initLCD();
   //initLCDByInternalReset();
@@ -48,12 +48,9 @@ int main(void) {
   while (1) {
     for (uint8_t i = 0; i < 4; i++) {
       writeStringToLCD(data[i]);
+      _delay_ms(10000);
+      clearDisplay();
     }
-    _delay_ms(5000);
-    clearDisplay();
-
-
-    //flashLED(5); // DEBUG
     _delay_ms(3000);
   }
 
