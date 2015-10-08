@@ -50,10 +50,17 @@ int main(void) {
     switch (serialChar) {
     case '\r':
       writeStringToLCD("\r\n");
+      transmitString("\n\e[1E\r");
+      break;
+      ;
+    case '\f':
+      writeCharToLCD(serialChar);
+      transmitString("\e[2J\e[1;1H");
       break;
       ;
     case 0x7f: // Backspace (sent as delete)
       writeStringToLCD("\b \b");
+      transmitString("\e[1D \e[1D");
       break;
       ;
     default:
