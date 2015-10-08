@@ -200,7 +200,19 @@ void writeCharToLCD(char c) {
   case '\a': // Alarm
     break;
     ;
-  case '\b': // Backspace
+  case '\b': // Backspace (non-destructive)
+    if (currentLineChars == 0 && currentLineNum == 0) {
+      // At first line, first column; there is no where to move; do nothing
+      break;
+    } else if (currentLineChars == 0) {
+      // At beginning of line, need to move the end of previous line
+      currentLineChars = LCD_CHARACTERS_PER_LINE - 1;
+      writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[--currentLineNum] + currentLineChars));
+    } else {
+      // OK, simply go back one character
+      writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + --currentLineChars));
+    }
+
     break;
     ;
   case '\r': // Carriage return
@@ -208,19 +220,24 @@ void writeCharToLCD(char c) {
     currentLineChars = 0;
     break;
     ;
+  case '\f': // Form feed
+    clearDisplay();
+    break;
+    ;
   default:
-    if (currentLineChars == LCD_CHARACTERS_PER_LINE) {
-      if (currentLineNum == LCD_NUMBER_OF_LINES - 1) {
-        clearDisplay();
-      } else {
-        writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[++currentLineNum]);
-        currentLineChars = 0;
-      }
-    }
+    if (currentLineChars == LCD_CHARACTERS_PER_LINE - 1 && currentLineNum == LCD_NUMBER_OF_LINES - 1) {
+      clearDisplay();
+    } else if (currentLineChars == LCD_CHARACTERS_PER_LINE - 1) {
+      loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
+      writeCharToLCD_(c);
+      currentLineChars = 0;
 
-    loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
-    writeCharToLCD_(c);
-    currentLineChars++;
+      writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[++currentLineNum]);
+    } else {
+      loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
+      writeCharToLCD_(c);
+      currentLineChars++;
+    }
     ;
   }
 }

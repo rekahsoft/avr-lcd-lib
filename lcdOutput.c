@@ -46,8 +46,21 @@ int main(void) {
 
   while (1) {
     serialChar = receiveByte();
-    writeCharToLCD(serialChar);
-    transmitByte(serialChar);   // Echo character back to serial console
+
+    switch (serialChar) {
+    case '\r':
+      writeStringToLCD("\r\n");
+      break;
+      ;
+    case 0x7f: // Backspace (sent as delete)
+      writeStringToLCD("\b \b");
+      break;
+      ;
+    default:
+      writeCharToLCD(serialChar);
+      transmitByte(serialChar);   // Echo character back to serial console
+      ;
+    }
   }
 
   return 0;
