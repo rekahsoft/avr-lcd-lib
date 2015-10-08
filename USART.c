@@ -49,6 +49,13 @@ void transmitByte(uint8_t data) {
   UDR0 = data;                                            /* send data */
 }
 
+void transmitString(const char* data) {
+  while (*data != '\0') {
+    transmitByte(*data);
+    data++;
+  }
+}
+
 uint8_t receiveByte(void) {
   loop_until_bit_is_set(UCSR0A, RXC0);       /* Wait for incoming data */
   return UDR0;                                /* return register value */
