@@ -76,39 +76,96 @@ void flashLED(uint8_t times);
 
 //------------------------------------
 
+/*
+  Bring LCD_ENABLE line high, wait for LCD_ENABLE_HIGH_DELAY; then bring LCD_ENABLE line low
+  and wait for LCD_ENABLE_LOW_DELAY.
+
+  Note: LCD_ENABLE, LCD_ENABLE_HIGH_DELAY, and LCD_ENABLE_LOW_DELAY must be defined in lcdLibConfig.h
+ */
 void clkLCD(void);
 
 void loop_until_LCD_BF_clear(void);
 
 #ifdef FOUR_BIT_MODE
+/*
+  Given a 8 bit integer, writes the four MSB's (one nibble) to the LCD data bus.
+
+  Note: this is only defined in FOUR_BIT_MODE
+ */
 void writeLCDNibble_(uint8_t);
 #endif
 
+/*
+  Given an 8 bit integer, writes it to the LCD data bus.
+
+  Note that this function does not ensure the LCD is ready to accept new data and thus needs to
+  be handled by the caller.
+ */
 void writeLCDByte_(uint8_t);
 
+/*
+  Given a 8 bit integer representing a LCD instruction, sends it to the LCD display.
+
+  Note that this function does not ensure the LCD is ready to accept a new instruction and thus
+  needs to be handled by the caller.
+ */
 void writeLCDInstr_(uint8_t);
 
+/*
+  Given a 8 bit integer representing a LCD instruction, waits until the LCD is ready and sends
+  the instruction.
+ */
 void writeLCDInstr(uint8_t);
 
+/*
+  Writes a character to the LCD display at the current cursor position.
+
+  Note that this function does not ensure the LCD is ready to accept a new character and thus
+  needs to be handled by the caller.
+ */
 void writeCharToLCD_(char);
 
+/*
+  Writes a character to the LCD display at the current cursor position after the LCD display is
+  ready for new data.
+ */
 void writeCharToLCD(char);
 
+/*
+  Writes a string to the LCD starting from the current cursor position.
+ */
 void writeStringToLCD(const char*);
 
+/*
+  Clears the display and positions the cursor in the top left of the LCD screen.
+ */
 void clearDisplay(void);
 
+/*
+  Brings the cursor the the top left of the LCD screen.
+ */
 void returnHome(void);
 
+/*
+  UNIMPLEMENTED
+ */
 char readCharFromLCD(void);
 
 /*
-  Do software initialization as specified by the datasheet
+  Initialize the LCD display via software initialization as specified by the datasheet.
 */
 void initLCD(void);
 
+/*
+  Initialize the LCD display via its internal reset circuit.
+
+  Note: this is not the recommended way to initialize the LCD as it is unreliable and depends
+        on the power supply. Preferably the software initialization method should be used (via
+        the initLCD function).
+ */
 void initLCDByInternalReset(void);
 
+//------------------------------------------------------------------------------------------
 
 /*
   Mode and settings sanity check
