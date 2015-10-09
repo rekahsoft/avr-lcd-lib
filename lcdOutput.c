@@ -31,6 +31,7 @@
 #include <util/delay.h>
 
 #include "lcdLib.h"
+#include "ansi_escapes.h"
 #include "USART.h"
 
 int main(void) {
@@ -50,17 +51,17 @@ int main(void) {
     switch (serialChar) {
     case '\r':
       writeStringToLCD("\r\n");
-      transmitString("\n\e[1E\r");
+      transmitString("\n" CNL(1) "\r");
       break;
       ;
     case '\f':
       writeCharToLCD(serialChar);
-      transmitString("\e[2J\e[1;1H");
+      transmitString(ED(2) CUP(1,1));
       break;
       ;
     case 0x7f: // Backspace (sent as delete)
       writeStringToLCD("\b \b");
-      transmitString("\e[1D \e[1D");
+      transmitString(CUB(1) " " CUB(1));
       break;
       ;
     default:
