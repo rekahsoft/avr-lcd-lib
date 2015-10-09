@@ -25,6 +25,6 @@ void initUSART(void);
 
 void transmitByte(uint8_t data);
 
-void transmitBytes(uint8_t* data);
+void transmitString(const char* data);
 
 uint8_t receiveByte(void);
