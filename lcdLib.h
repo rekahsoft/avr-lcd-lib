@@ -67,15 +67,7 @@
 
 
 //------------------------------------
-
-#define STATUS_LED_PORT PORTC
-#define STATUS_LED_DDR  DDRC
-#define STATUS_LED      PC5
-
 // Function definitions
-void flashLED(uint8_t times);
-
-//------------------------------------
 
 /**
   Bring LCD_ENABLE line high, wait for LCD_ENABLE_HIGH_DELAY; then bring LCD_ENABLE line low

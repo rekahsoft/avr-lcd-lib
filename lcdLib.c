@@ -35,18 +35,6 @@ const uint8_t lineBeginnings[LCD_NUMBER_OF_LINES] = { LCD_LINE_BEGINNINGS };
 //------------------------------------------------------------------------------------------
 // Function definitions
 
-void flashLED(uint8_t times) {
-  while (times > 0) {
-    STATUS_LED_PORT |= 1 << STATUS_LED; // turn on status LED
-    _delay_ms(100);
-    STATUS_LED_PORT &= ~(1 << STATUS_LED); // turn status LED off
-    _delay_ms(100);
-    times--;
-  }
-}
-
-//------------------------------------
-
 void clkLCD(void) {
   LCD_ENABLE_PORT |= (1 << LCD_ENABLE);
   _delay_us(LCD_ENABLE_HIGH_DELAY);
@@ -63,7 +51,6 @@ void loop_until_LCD_BF_clear(void) {
   // Set LCD_BF as input
   LCD_DBUS7_DDR &= ~(1 << LCD_BF);
 
-  STATUS_LED_PORT |= 1 << STATUS_LED; // DEBUG
   do {
     bf = 0;
     LCD_ENABLE_PORT |= (1 << LCD_ENABLE);
@@ -81,7 +68,6 @@ void loop_until_LCD_BF_clear(void) {
     _delay_us(1);                          // 'address hold time', 'data hold time' and 'enable cycle width'
 #endif
   } while (bf);
-  STATUS_LED_PORT &= ~(1 << STATUS_LED); // DEBUG
 
 #if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
   LCD_DBUS7_DDR |= (1 << LCD_DBUS7);
@@ -406,8 +392,6 @@ void initLCD (void) {
 
   // Display on, cursor on, blink off
   writeLCDInstr(INSTR_DISPLAY | (1 << INSTR_DISPLAY_D) | (1 << INSTR_DISPLAY_C));
-
-  flashLED(5); // DEBUG
 }
 
 /*

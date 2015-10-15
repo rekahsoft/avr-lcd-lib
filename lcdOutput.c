@@ -34,6 +34,20 @@
 #include "ansi_escapes.h"
 #include "USART.h"
 
+#define STATUS_LED_PORT PORTC
+#define STATUS_LED_DDR  DDRC
+#define STATUS_LED      PC5
+
+void flashLED(uint8_t times) {
+  while (times > 0) {
+    STATUS_LED_PORT |= 1 << STATUS_LED; // turn on status LED
+    _delay_ms(100);
+    STATUS_LED_PORT &= ~(1 << STATUS_LED); // turn status LED off
+    _delay_ms(100);
+    times--;
+  }
+}
+
 int main(void) {
   clock_prescale_set(clock_div_1);
   
@@ -44,6 +58,7 @@ int main(void) {
 
   initLCD();
   //initLCDByInternalReset();
+  flashLED(5); // DEBUG
 
   while (1) {
     serialChar = receiveByte();
