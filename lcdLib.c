@@ -396,20 +396,16 @@ void initLCD (void) {
   /* BF now can be checked */
 
   // Set functions of LCD
-  writeLCDInstr_(INSTR_DISPLAY); // Display off
-  _delay_us(LCD_GENERIC_INSTR_DELAY);
+  writeLCDInstr(INSTR_DISPLAY); // Display off
 
   // Clear display
-  writeLCDInstr_(CMD_CLEAR_DISPLAY);
-  _delay_us(LCD_CLEAR_DISPLAY_DELAY);
+  writeLCDInstr(CMD_CLEAR_DISPLAY);
 
   // Increment mode, no shift
-  writeLCDInstr_(INSTR_ENTRY_SET | (1 << INSTR_ENTRY_SET_ID));
-  _delay_us(LCD_GENERIC_INSTR_DELAY);
+  writeLCDInstr(INSTR_ENTRY_SET | (1 << INSTR_ENTRY_SET_ID));
 
   // Display on, cursor on, blink off
-  writeLCDInstr_(INSTR_DISPLAY | (1 << INSTR_DISPLAY_D) | (1 << INSTR_DISPLAY_C));
-  _delay_us(LCD_GENERIC_INSTR_DELAY);
+  writeLCDInstr(INSTR_DISPLAY | (1 << INSTR_DISPLAY_D) | (1 << INSTR_DISPLAY_C));
 
   flashLED(5); // DEBUG
 }
