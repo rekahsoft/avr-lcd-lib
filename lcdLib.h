@@ -84,21 +84,24 @@ void flashLED(uint8_t times);
  */
 void clkLCD(void);
 
+/*
+  Wait until LCD_BF (busy flag) is cleared (low).
+ */
 void loop_until_LCD_BF_clear(void);
 
-#ifdef FOUR_BIT_MODE
 /*
   Given a 8 bit integer, writes the four MSB's (one nibble) to the LCD data bus.
 
   Note: this is only defined in FOUR_BIT_MODE
  */
+#ifdef FOUR_BIT_MODE
 void writeLCDNibble_(uint8_t);
 #endif
 
 /*
   Given an 8 bit integer, writes it to the LCD data bus.
 
-  Note that this function does not ensure the LCD is ready to accept new data and thus needs to
+  This function does not ensure the LCD is ready to accept new data and thus needs to
   be handled by the caller.
  */
 void writeLCDByte_(uint8_t);
@@ -127,7 +130,8 @@ void writeCharToLCD_(char);
 
 /*
   Writes a character to the LCD display at the current cursor position after the LCD display is
-  ready for new data.
+  ready for new data. Allows the following ASCII escapes: '\n', '\r', '\f' and '\b'; ignores
+  ASCII escape '\a'.
  */
 void writeCharToLCD(char);
 

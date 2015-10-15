@@ -33,8 +33,8 @@ volatile uint8_t currentLineChars = 0;
 const uint8_t lineBeginnings[LCD_NUMBER_OF_LINES] = { LCD_LINE_BEGINNINGS };
 
 //------------------------------------------------------------------------------------------
-
 // Function definitions
+
 void flashLED(uint8_t times) {
   while (times > 0) {
     STATUS_LED_PORT |= 1 << STATUS_LED; // turn on status LED
@@ -100,10 +100,6 @@ void loop_until_LCD_BF_clear(void) {
 }
 
 #ifdef FOUR_BIT_MODE
-/*
-  Writes one nibble to the LCD data bus. Does not touch the RS or RW control lines.
-  Note: the bits that are sent are the four MSBs of the given argument
- */
 void writeLCDNibble_(uint8_t b) {
   // Reset data lines to zeros
   LCD_DBUS7_PORT &= ~(1 << LCD_DBUS7);
@@ -122,9 +118,6 @@ void writeLCDNibble_(uint8_t b) {
 }
 #endif
 
-/*
-  Write a byte to the LCD data bus. Does not touch the RS or RW control lines.
-*/
 void writeLCDByte_(uint8_t b) {
 #ifdef FOUR_BIT_MODE
   writeLCDNibble_(b);
@@ -157,9 +150,15 @@ void writeLCDByte_(uint8_t b) {
 #endif
 }
 
+/*
+  Sets RS=RW=0 and writes the given 8 bit integer to the LCD databus. In the default 8-bit mode
+  and EIGHT_BIT_ARBITRARY_PIN_MODE, the given data is written in one cycle using the
+  writeLCDByte_ function. In FOUR_BIT_MODE however, the given data is written in two cycles
+  using two successive calls to the writeLCDNibble_ function.
+ */
 void writeLCDInstr_(uint8_t instr) {
-LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
-LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
+  LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
+  LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
 
 #ifdef FOUR_BIT_MODE
   writeLCDNibble_(instr);
@@ -174,6 +173,12 @@ void writeLCDInstr(uint8_t instr) {
   writeLCDInstr_(instr);
 }
 
+/*
+  Sets RS=1, RW=0 and accepts a char (8 bit) and outputs it to the current cursor position of
+  the LCD. In the default 8-bit mode and EIGHT_BIT_ARBITRARY_PIN_MODE, the given data is
+  written in one cycle using the writeLCDByte_ function. In FOUR_BIT_MODE however, the given
+  data is written in two cycles using two successive calls to the writeLCDNibble_ function.
+ */
 void writeCharToLCD_(char c) {
   LCD_RS_PORT |= (1 << LCD_RS);  // RS=1
   LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
@@ -186,6 +191,22 @@ void writeCharToLCD_(char c) {
 #endif
 }
 
+/*
+  Given a single character, checks whether its a ASCII escape and does the following:
+
+  - Newline '\n': moves the cursor to the next physical line of the LCD display; if the cursor is on
+    the last line of the display, clears the display and positions the cursor at the top left
+    of the LCD
+  - Carriage return '\r': moves the cursor to the beginning of the current line
+  - Backspace '\b': moves the cursor one position backwards, wrapping to the end of the
+    previous line when at the beginning of a line (other then the first one). A space is then
+    inserted to replace the character at point, without moving the cursor. When the cursor is
+    at the beginning of the first line, does nothing.
+  - Form feed '\f': clears the LCD display and places the cursor at the beginning of the first line.
+  - Alarm '\a': ignored
+
+  Any other character is sent to the LCD display using writeCharToLCD_.
+ */
 void writeCharToLCD(char c) {
   switch (c) {
   case '\n': // Line feed
@@ -249,6 +270,10 @@ void writeStringToLCD(const char* str) {
   }
 }
 
+/*
+  Writes the CMD_CLEAR_DISPLAY command to the LCD using writeLCDINSTR, and clears the local
+  char and line counters.
+ */
 void clearDisplay(void) {
   writeLCDInstr(CMD_CLEAR_DISPLAY);
 
@@ -257,6 +282,10 @@ void clearDisplay(void) {
   currentLineChars = 0;
 }
 
+/*
+  Writes the CMD_RETURN_HOME command to the LCD using writeLCDInstr, and clears the local char
+  and line counters.
+ */
 void returnHome(void) {
   writeLCDInstr(CMD_RETURN_HOME);
 
@@ -325,6 +354,10 @@ static inline void disableLCDOutput(void) {
 #endif
 }
 
+/*
+  Set RS=RW=0 and write the CMD_INIT command to the LCD data bus. Note that an appropriate
+  pause must follow before sending new commands to the LCD using writeLCD*_ functions.
+ */
 static inline void softwareLCDInitPulse(void) {
   enableLCDOutput();
   LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
