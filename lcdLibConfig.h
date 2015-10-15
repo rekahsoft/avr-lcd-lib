@@ -16,9 +16,10 @@
 */
 
 /**
- * File: lcdLibConfig.h
- * Author: Collin J. Doering <collin.doering@rekahsoft.ca>
- * Date: Oct 4, 2015
+ * @file lcdLibConfig.h
+ * @author Collin J. Doering <collin.doering@rekahsoft.ca>
+ * @date Oct 4, 2015
+ * @brief Configuration file for lcdLib.h
  */
 
 // Includes -------------------------------------------------------------------------------
@@ -44,12 +45,12 @@
   Screen characteristics
 */
 
-#define LCD_CHARACTERS_PER_LINE 20
+#define LCD_CHARACTERS_PER_LINE 20      ///< Number of characters per line of the LCD
+#define LCD_NUMBER_OF_LINES     4       ///< Number of lines of the LCD
 #define LCD_LINE_BEGINNINGS     0x00, \
                                 0x40, \
                                 0x14, \
-                                0x54
-#define LCD_NUMBER_OF_LINES     4
+                                0x54    ///< Memory locations for each physical line ordered 1 to LCD_NUMBER_OF_LINES
 
 /* Modes */
 

@@ -16,9 +16,10 @@
 */
 
 /**
- * File: lcdLib.h
- * Author: Collin J. Doering <collin.doering@rekahsoft.ca>
- * Date: Sep 29, 2015
+ * @file lcdLib.h
+ * @author Collin J. Doering <collin.doering@rekahsoft.ca>
+ * @date Sep 29, 2015
+ * @brief Functions to initialize, and operate a character LCD.
  */
 
 // Includes -------------------------------------------------------------------------------
@@ -76,7 +77,7 @@ void flashLED(uint8_t times);
 
 //------------------------------------
 
-/*
+/**
   Bring LCD_ENABLE line high, wait for LCD_ENABLE_HIGH_DELAY; then bring LCD_ENABLE line low
   and wait for LCD_ENABLE_LOW_DELAY.
 
@@ -84,12 +85,12 @@ void flashLED(uint8_t times);
  */
 void clkLCD(void);
 
-/*
+/**
   Wait until LCD_BF (busy flag) is cleared (low).
  */
 void loop_until_LCD_BF_clear(void);
 
-/*
+/**
   Given a 8 bit integer, writes the four MSB's (one nibble) to the LCD data bus.
 
   Note: this is only defined in FOUR_BIT_MODE
@@ -98,7 +99,7 @@ void loop_until_LCD_BF_clear(void);
 void writeLCDNibble_(uint8_t);
 #endif
 
-/*
+/**
   Given an 8 bit integer, writes it to the LCD data bus.
 
   This function does not ensure the LCD is ready to accept new data and thus needs to
@@ -106,7 +107,7 @@ void writeLCDNibble_(uint8_t);
  */
 void writeLCDByte_(uint8_t);
 
-/*
+/**
   Given a 8 bit integer representing a LCD instruction, sends it to the LCD display.
 
   Note that this function does not ensure the LCD is ready to accept a new instruction and thus
@@ -114,13 +115,13 @@ void writeLCDByte_(uint8_t);
  */
 void writeLCDInstr_(uint8_t);
 
-/*
+/**
   Given a 8 bit integer representing a LCD instruction, waits until the LCD is ready and sends
   the instruction.
  */
 void writeLCDInstr(uint8_t);
 
-/*
+/**
   Writes a character to the LCD display at the current cursor position.
 
   Note that this function does not ensure the LCD is ready to accept a new character and thus
@@ -128,24 +129,24 @@ void writeLCDInstr(uint8_t);
  */
 void writeCharToLCD_(char);
 
-/*
+/**
   Writes a character to the LCD display at the current cursor position after the LCD display is
   ready for new data. Allows the following ASCII escapes: '\n', '\r', '\f' and '\b'; ignores
   ASCII escape '\a'.
  */
 void writeCharToLCD(char);
 
-/*
+/**
   Writes a string to the LCD starting from the current cursor position.
  */
 void writeStringToLCD(const char*);
 
-/*
+/**
   Clears the display and positions the cursor in the top left of the LCD screen.
  */
 void clearDisplay(void);
 
-/*
+/**
   Brings the cursor the the top left of the LCD screen.
  */
 void returnHome(void);
@@ -155,12 +156,12 @@ void returnHome(void);
  */
 char readCharFromLCD(void);
 
-/*
+/**
   Initialize the LCD display via software initialization as specified by the datasheet.
 */
 void initLCD(void);
 
-/*
+/**
   Initialize the LCD display via its internal reset circuit.
 
   Note: this is not the recommended way to initialize the LCD as it is unreliable and depends

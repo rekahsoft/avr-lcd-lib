@@ -16,40 +16,41 @@
  */
 
 /**
- * File: ansi_escapes.h
- * Author: Collin J. Doering <collin.doering@rekahsoft.ca>
- * Date: Oct 9, 2015
+ * @file ansi_escapes.h
+ * @author Collin J. Doering <collin.doering@rekahsoft.ca>
+ * @date Oct 9, 2015
+ * @brief Macros to ease writing ANSI escapes.
  */
 
-#define CSI "\e["
+#define CSI "\e["                   ///< Control Sequence Introducer
 
-#define CUU(n) CSI #n "A"           // Cursor up
-#define CUD(n) CSI #n "B"           // Cursor down
-#define CUF(n) CSI #n "C"           // Cursor forward
-#define CUB(n) CSI #n "D"           // Cursor backward
+#define CUU(n) CSI #n "A"           ///< Cursor up
+#define CUD(n) CSI #n "B"           ///< Cursor down
+#define CUF(n) CSI #n "C"           ///< Cursor forward
+#define CUB(n) CSI #n "D"           ///< Cursor backward
 
-#define CNL(n) CSI #n "E"           // Cursor next line
-#define CPL(n) CSI #n "F"           // Cursor previous line
+#define CNL(n) CSI #n "E"           ///< Cursor next line
+#define CPL(n) CSI #n "F"           ///< Cursor previous line
 
-#define CHA(n) CSI #n "G"           // Cursor horizontal absolute
-#define CUP(n,m) CSI #n ";" #m "H"  // Cursor position
+#define CHA(n) CSI #n "G"           ///< Cursor horizontal absolute
+#define CUP(n,m) CSI #n ";" #m "H"  ///< Cursor position
 
-#define ED(n) CSI #n "J"            // Erase display
-#define EL(n) CSI #n "K"            // Erase in line
-#define SU(n) CSI #n "S"            // Scroll up
-#define SD(n) CSI #n "T"            // Scroll down
+#define ED(n) CSI #n "J"            ///< Erase display
+#define EL(n) CSI #n "K"            ///< Erase in line
+#define SU(n) CSI #n "S"            ///< Scroll up
+#define SD(n) CSI #n "T"            ///< Scroll down
 
-#define HVP(n,m) CSI #n ";" #m "f"  // Horizontal and vertical position
+#define HVP(n,m) CSI #n ";" #m "f"  ///< Horizontal and vertical position
 
-// #define SGR(n,m) CSI #n #m         // Select graphic rendition
+// #define SGR(n,m) CSI #n #m         ///< Select graphic rendition
 
-#define AUX_ON  CSI "5i"             // AUX port on
-#define AUX_OFF CSI "4i"             // AUX port off
+#define AUX_ON  CSI "5i"             ///< AUX port on
+#define AUX_OFF CSI "4i"             ///< AUX port off
 
-// #define DSR CSI "6 n"             // Device status report
+// #define DSR CSI "6 n"             ///< Device status report
 
-#define SCP CSI "s"                  // Save cursor position
-#define RCP CSI "u"                  // Restore cursor position
+#define SCP CSI "s"                  ///< Save cursor position
+#define RCP CSI "u"                  ///< Restore cursor position
 
-#define HIDE_CURSOR CSI "?25l"       // DECTCEM: hide cursor
-#define SHOW_CURSOR CSI "?25h"       // DECTCEM: show cursor
+#define HIDE_CURSOR CSI "?25l"       ///< DECTCEM: hide cursor
+#define SHOW_CURSOR CSI "?25h"       ///< DECTCEM: show cursor

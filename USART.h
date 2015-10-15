@@ -16,15 +16,28 @@
 */
 
 /**
- * File: USART.h
- * Author: Collin J. Doering <collin.doering@rekahsoft.ca>
- * Date: Oct  6, 2015
+ * @file USART.h
+ * @author Collin J. Doering <collin.doering@rekahsoft.ca>
+ * @date Oct  6, 2015
+ * @brief Functions to initialize, read and write using USART.
  */
 
+/**
+   Initialize USART hardware.
+*/
 void initUSART(void);
 
+/**
+   Transmit a single byte using USART.
+*/
 void transmitByte(uint8_t data);
 
+/**
+   Transmit a string using USART.
+*/
 void transmitString(const char* data);
 
+/**
+   Receive a single byte using USART
+*/
 uint8_t receiveByte(void);
