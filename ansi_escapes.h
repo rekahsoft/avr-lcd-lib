@@ -40,3 +40,16 @@
 #define SD(n) CSI #n "T"            // Scroll down
 
 #define HVP(n,m) CSI #n ";" #m "f"  // Horizontal and vertical position
+
+// #define SGR(n,m) CSI #n #m         // Select graphic rendition
+
+#define AUX_ON  CSI "5i"             // AUX port on
+#define AUX_OFF CSI "4i"             // AUX port off
+
+// #define DSR CSI "6 n"             // Device status report
+
+#define SCP CSI "s"                  // Save cursor position
+#define RCP CSI "u"                  // Restore cursor position
+
+#define HIDE_CURSOR CSI "?25l"       // DECTCEM: hide cursor
+#define SHOW_CURSOR CSI "?25h"       // DECTCEM: show cursor
