@@ -25,6 +25,7 @@
 // Includes -------------------------------------------------------------------------------
 
 #include <avr/io.h>
+#include <math.h>
 #include "lcdLibConfig.h"
 
 //------------------------------------------------------------------------------------------
@@ -64,6 +65,11 @@
 
 // Set DD RAM address instruction
 #define INSTR_DDRAM_ADDR     0x80
+
+//-------------------------------------
+
+
+#define LCD_CHARACTERS_PER_SCREEN (LCD_CHARACTERS_PER_LINE * LCD_NUMBER_OF_LINES)
 
 
 //------------------------------------
@@ -133,6 +139,9 @@ void writeCharToLCD(char);
  */
 void writeStringToLCD(const char*);
 
+//-----------------------------------------------------------------------------------------------
+// LCD command functions
+
 /**
   Clears the display and positions the cursor in the top left of the LCD screen.
  */
@@ -143,10 +152,59 @@ void clearDisplay(void);
  */
 void returnHome(void);
 
+/**
+   Gets the current row and column of the LCD cursor.
+*/
+void getCursorPosition(uint8_t* row, uint8_t* column);
+
+/**
+   Sets given pointers row and column to the current row and column occupied by the LCD cursor.
+ */
+void setCursorPosition(uint8_t row, uint8_t column);
+
+/**
+   Moves the cursor n positions up. If the cursor is at the edge of the screen this has no effect.
+ */
+void moveCursorUp(uint8_t n);
+
+/**
+   Moves the cursor n positions down. If the cursor is at the edge of the screen this has no effect.
+ */
+void moveCursorDown(uint8_t n);
+
+/**
+   Moves the cursor n positions forward. If the cursor is at the edge of the screen this has no effect.
+ */
+void moveCursorForward(uint8_t n);
+
+/**
+   Moves the cursor n positions backwards. If the cursor is at the edge of the screen this has no effect.
+ */
+void moveCursorBackward(uint8_t n);
+
+/**
+   Moves the cursor to the beginning of the line n lines down.
+ */
+void moveCursorNextLine(uint8_t n);
+
+/**
+   Moves the cursor to the beginning of the line n lines up.
+ */
+void moveCursorPreviousLine(uint8_t n);
+
+/**
+   Moves the cursor to column n. If n is off screen go to the last line.
+ */
+void moveCursorToColumn(uint8_t n);
+
+//-----------------------------------------------------------------------------------------------
+
 /*
   UNIMPLEMENTED
  */
 char readCharFromLCD(void);
+
+//-----------------------------------------------------------------------------------------------
 
 /**
   Initialize the LCD display via software initialization as specified by the datasheet.

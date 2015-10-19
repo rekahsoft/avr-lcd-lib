@@ -29,6 +29,7 @@
 #include <avr/interrupt.h>
 #include <avr/power.h>
 #include <util/delay.h>
+#include <stdlib.h>
 
 #include "lcdLib.h"
 #include "ansi_escapes.h"
@@ -37,6 +38,8 @@
 #define STATUS_LED_PORT PORTC
 #define STATUS_LED_DDR  DDRC
 #define STATUS_LED      PC5
+
+//--------------------------------------------------
 
 void flashLED(uint8_t times) {
   while (times > 0) {
@@ -47,11 +50,26 @@ void flashLED(uint8_t times) {
     times--;
   }
 }
+//--------------------------------------------------
+
+/*
+  Initialize previous, current, and next screen variables to spaces
+*/
+char* initScreenMem(const uint8_t len) {
+  char *scrn = (char*) malloc(len * sizeof(char));
+  for (uint8_t i = 0; i < len; i++) {
+    scrn[i] = ' ';
+  }
+  return scrn;
+}
 
 int main(void) {
   clock_prescale_set(clock_div_1);
   
   STATUS_LED_DDR |= 1 << STATUS_LED; // DEBUG
+
+  // Allocate and init first block of heap for storing LCD data
+  char* scrn = initScreenMem(LCD_CHARACTERS_PER_SCREEN);
 
   initUSART();
   char serialChar;
@@ -59,6 +77,45 @@ int main(void) {
   initLCD();
   //initLCDByInternalReset();
   flashLED(5); // DEBUG
+
+
+  writeStringToLCD("Backwards 4" CUB(4));
+  _delay_ms(5000);
+
+  clearDisplay();
+  writeStringToLCD("Backwards 3" CUB(3));
+  _delay_ms(5000);
+
+    clearDisplay();
+  writeStringToLCD("Backwards 2" CUB(2));
+  _delay_ms(5000);
+
+  clearDisplay();
+  writeStringToLCD("Backwards 1" CUB(1));
+  _delay_ms(5000);
+
+  clearDisplay();
+  writeStringToLCD("Forwards 4" CUF(4));
+  _delay_ms(5000);
+
+  /* writeStringToLCD(CNL(1)); */
+  /* _delay_ms(5000); */
+
+  /* writeStringToLCD(CUF(10)); */
+  /* _delay_ms(5000); */
+
+  /* writeStringToLCD(CPL(1)); */
+  /* _delay_ms(5000); */
+
+  /* writeStringToLCD(CHA(20)); */
+  /* _delay_ms(5000); */
+
+  /* writeStringToLCD(CUP(20,20)); */
+  /* _delay_ms(5000); */
+
+  /* writeStringToLCD(CUP(1,1)); */
+  /* _delay_ms(5000); */
+
 
   while (1) {
     serialChar = receiveByte();

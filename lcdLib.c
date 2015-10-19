@@ -249,9 +249,112 @@ void writeCharToLCD(char c) {
   }
 }
 
+/*
+  Given a character string, and a uint8_t pointer, reads the character string until a
+  non-numerical ASCII character, returning the integer representation of the number read. At
+  the end of the functions execution, the found_num uint8_t pointer will indicate how many
+  digits were read.
+ */
+uint8_t readASCIINumber(const char* str, uint8_t* found_num) {
+  const uint8_t num_digits = 4;
+  uint8_t nums[num_digits];
+
+  while (*str != '\0' && *found_num < num_digits - 1) {
+    if (*str >= 0x30 && *str <= 0x39) {
+      // Use *str as a number (specified in ASCII)
+      nums[*(found_num++)] = *str - 0x30;
+    } else {
+      break;
+    }
+
+    str++;
+  }
+
+  uint8_t ret = 0;
+  for (uint8_t i = 0; i < num_digits; i++)
+    ret += nums[num_digits - i] * pow(10, i);
+  return ret;
+}
+
 void writeStringToLCD(const char* str) {
   while (*str != '\0') {
-    writeCharToLCD(*str);
+    // Check for ANSI CSI (Control Sequence Introducer)
+    if (*str == '\e') {
+      if (*(++str) != '\0' && *str == '[') {
+        // Read optional variable length number in ASCII (0x30 - 0x3f) where 0x3a - 0x3f are
+        // ignored (they are used as flags by some terminals
+        uint8_t fnd0;
+        uint8_t num0 = readASCIINumber(str++, &fnd0);
+
+        // Read optional (semicolon followed by optional variable length number)
+        uint8_t fnd1;
+        uint8_t num1;
+        if (*(++str) != '\0' && *str == ';') {
+          num1 = readASCIINumber(str++, &fnd1);
+
+          // Read control character (between 0x40 - 0x7e) for two argument sequences
+          switch (*str) {
+          case 'f': // HVP - Horizontal and vertical position
+          case 'H': // CUP - Cursor position
+            num0 = fnd0 ? num0 : 1;
+            num1 = fnd1 ? num1 : 1;
+            setCursorPosition(num0, num1);
+            break;
+            ;;
+          default: // Invalid control character
+            break;
+            ;;
+          }
+        } else if (*str != '\0') {
+          // Read control character (between 0x40 - 0x7e) for single argument sequences
+          switch (*str) {
+          case 'A': // CUU - Cursor up
+            num0 = fnd0 ? num0 : 1;
+            moveCursorUp(num0);
+            break;
+            ;;
+          case 'B': // CUD - Cursor down
+            num0 = fnd0 ? num0 : 1;
+            moveCursorDown(num0);
+            break;
+            ;;
+          case 'C': // CUF - Cursor forward
+            num0 = fnd0 ? num0 : 1;
+            moveCursorForward(num0);
+            break;
+            ;;
+          case 'D': // CUB - Cursor back
+            num0 = fnd0 ? num0 : 1;
+            moveCursorBackward(num0);
+            break;
+            ;;
+          case 'E': // CNL - Cursor next line
+            num0 = fnd0 ? num0 : 1;
+            moveCursorNextLine(num0);
+            break;
+            ;;
+          case 'F': // CPL - Cursor previous line
+            num0 = fnd0 ? num0 : 1;
+            moveCursorPreviousLine(num0);
+            break;
+            ;;
+          case 'G': // CHA - Cursor horizontal absolute
+            num0 = fnd0 ? num0 : 1;
+            moveCursorToColumn(num0);
+            break;
+            ;;
+          default:  // Invalid control character
+            break;
+            ;;
+          }
+        } else {
+          return; // Invalid escape sequence (terminated early)
+        }
+      }
+    } else {
+      writeCharToLCD(*str);
+    }
+
     str++;
   }
 }
@@ -279,6 +382,88 @@ void returnHome(void) {
   currentLineNum   = 0;
   currentLineChars = 0;
 }
+
+void getCursorPosition(uint8_t* row, uint8_t* column) {
+  *row = currentLineNum + 1;
+  *column = currentLineChars + 1;
+}
+
+void setCursorPosition(uint8_t row, uint8_t column) {
+  // Set currentLineNum and currentLineChars
+  currentLineNum = row ? row - 1 : 0;
+  currentLineChars = column ? column - 1 : 0;
+
+  writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
+}
+
+void moveCursorUp(uint8_t n) {
+  if (n < currentLineNum + 1) {
+    currentLineNum -= n;
+  } else {
+    currentLineNum = 0;
+  }
+
+  writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
+}
+
+void moveCursorDown(uint8_t n) {
+  if (n + currentLineNum > LCD_NUMBER_OF_LINES - 1) {
+    currentLineNum += n;
+  } else {
+    currentLineNum = LCD_NUMBER_OF_LINES - 1;
+  }
+
+  writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
+}
+
+void moveCursorForward(uint8_t n) {
+  if (n + currentLineChars > LCD_CHARACTERS_PER_LINE - 1) {
+    currentLineChars += n;
+  } else {
+    currentLineChars = LCD_CHARACTERS_PER_LINE - 1;
+  }
+
+  writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
+}
+
+void moveCursorBackward(uint8_t n) {
+  if (n < currentLineChars + 1) {
+    currentLineChars += n;
+  } else {
+    currentLineChars = 0;
+  }
+
+  writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
+}
+
+void moveCursorNextLine(uint8_t n) {
+  if (n + currentLineNum > LCD_NUMBER_OF_LINES - 1) {
+    currentLineNum += n;
+  } else {
+    currentLineNum = LCD_NUMBER_OF_LINES - 1;
+  }
+
+  writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
+}
+
+void moveCursorPreviousLine(uint8_t n) {
+  if (n < currentLineNum + 1) {
+    currentLineNum -= n;
+  } else {
+    currentLineNum = 0;
+  }
+
+  writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
+}
+
+void moveCursorToColumn(uint8_t n) {
+  if (n < LCD_CHARACTERS_PER_LINE) {
+    currentLineChars = n ? n - 1 : 0;
+    writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
+  } // else index out of range (off screen column)
+}
+
+//-----------------------------------------------------------------------------------------------
 
 /* char readCharFromLCD(void) { */
 /*   loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions */
