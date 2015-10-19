@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 /**
  * File: lcdLib.c
@@ -141,7 +141,7 @@ void writeLCDByte_(uint8_t b) {
   and EIGHT_BIT_ARBITRARY_PIN_MODE, the given data is written in one cycle using the
   writeLCDByte_ function. In FOUR_BIT_MODE however, the given data is written in two cycles
   using two successive calls to the writeLCDNibble_ function.
- */
+*/
 void writeLCDInstr_(uint8_t instr) {
   LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
   LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
@@ -164,7 +164,7 @@ void writeLCDInstr(uint8_t instr) {
   the LCD. In the default 8-bit mode and EIGHT_BIT_ARBITRARY_PIN_MODE, the given data is
   written in one cycle using the writeLCDByte_ function. In FOUR_BIT_MODE however, the given
   data is written in two cycles using two successive calls to the writeLCDNibble_ function.
- */
+*/
 void writeCharToLCD_(char c) {
   LCD_RS_PORT |= (1 << LCD_RS);  // RS=1
   LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
@@ -181,18 +181,18 @@ void writeCharToLCD_(char c) {
   Given a single character, checks whether its a ASCII escape and does the following:
 
   - Newline '\n': moves the cursor to the next physical line of the LCD display; if the cursor is on
-    the last line of the display, clears the display and positions the cursor at the top left
-    of the LCD
+  the last line of the display, clears the display and positions the cursor at the top left
+  of the LCD
   - Carriage return '\r': moves the cursor to the beginning of the current line
   - Backspace '\b': moves the cursor one position backwards, wrapping to the end of the
-    previous line when at the beginning of a line (other then the first one). A space is then
-    inserted to replace the character at point, without moving the cursor. When the cursor is
-    at the beginning of the first line, does nothing.
+  previous line when at the beginning of a line (other then the first one). A space is then
+  inserted to replace the character at point, without moving the cursor. When the cursor is
+  at the beginning of the first line, does nothing.
   - Form feed '\f': clears the LCD display and places the cursor at the beginning of the first line.
   - Alarm '\a': ignored
 
   Any other character is sent to the LCD display using writeCharToLCD_.
- */
+*/
 void writeCharToLCD(char c) {
   switch (c) {
   case '\n': // Line feed
@@ -259,7 +259,7 @@ void writeStringToLCD(const char* str) {
 /*
   Writes the CMD_CLEAR_DISPLAY command to the LCD using writeLCDINSTR, and clears the local
   char and line counters.
- */
+*/
 void clearDisplay(void) {
   writeLCDInstr(CMD_CLEAR_DISPLAY);
 
@@ -271,7 +271,7 @@ void clearDisplay(void) {
 /*
   Writes the CMD_RETURN_HOME command to the LCD using writeLCDInstr, and clears the local char
   and line counters.
- */
+*/
 void returnHome(void) {
   writeLCDInstr(CMD_RETURN_HOME);
 
@@ -291,6 +291,8 @@ void returnHome(void) {
 /*   LCD_DBUS_DDR = 0xff; // Reset all LCD_DBUS_PORT pins to outputs */
 /*   return c; */
 /* } */
+
+//-----------------------------------------------------------------------------------------------
 
 /*
   Set all pins of LCD_DBUS, as well as pins LCD_RS, and LCD_RW as outputs
