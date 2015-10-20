@@ -255,42 +255,40 @@ void writeCharToLCD(char c) {
   the end of the functions execution, the found_num uint8_t pointer will indicate how many
   digits were read.
  */
-uint8_t readASCIINumber(const char* str, uint8_t* found_num) {
-  const uint8_t num_digits = 4;
-  uint8_t nums[num_digits];
+uint8_t readASCIINumber(char* str, uint8_t* found_num, char** new_loc) {
+  uint8_t nums[3];
 
-  while (*str != '\0' && *found_num < num_digits - 1) {
+  *found_num = 0;
+  while (*str != '\0' && *found_num < 3) {
     if (*str >= 0x30 && *str <= 0x39) {
       // Use *str as a number (specified in ASCII)
-      nums[*(found_num++)] = *str - 0x30;
+      nums[(*found_num)++] = *str - 0x30;
     } else {
       break;
     }
 
     str++;
   }
+  *new_loc = str;
 
-  uint8_t ret = 0;
-  for (uint8_t i = 0; i < num_digits; i++)
-    ret += nums[num_digits - i] * pow(10, i);
-  return ret;
+  return nums[0]*100 + nums[1]*10 + nums[2];
 }
 
-void writeStringToLCD(const char* str) {
+void writeStringToLCD(char* str) {
   while (*str != '\0') {
     // Check for ANSI CSI (Control Sequence Introducer)
     if (*str == '\e') {
       if (*(++str) != '\0' && *str == '[') {
         // Read optional variable length number in ASCII (0x30 - 0x3f) where 0x3a - 0x3f are
-        // ignored (they are used as flags by some terminals
+        // ignored (they are used as flags by some terminals)
         uint8_t fnd0;
-        uint8_t num0 = readASCIINumber(str++, &fnd0);
+        uint8_t num0 = readASCIINumber(++str, &fnd0, &str);
 
         // Read optional (semicolon followed by optional variable length number)
         uint8_t fnd1;
         uint8_t num1;
-        if (*(++str) != '\0' && *str == ';') {
-          num1 = readASCIINumber(str++, &fnd1);
+        if (*str != '\0' && *str == ';') {
+          num1 = readASCIINumber(str, &fnd1, &str);
 
           // Read control character (between 0x40 - 0x7e) for two argument sequences
           switch (*str) {
@@ -314,6 +312,7 @@ void writeStringToLCD(const char* str) {
             break;
             ;;
           case 'B': // CUD - Cursor down
+            PORTC ^= (1 << PC5);
             num0 = fnd0 ? num0 : 1;
             moveCursorDown(num0);
             break;
@@ -344,6 +343,7 @@ void writeStringToLCD(const char* str) {
             break;
             ;;
           default:  // Invalid control character
+            writeCharToLCD(*str);
             break;
             ;;
           }
@@ -407,7 +407,7 @@ void moveCursorUp(uint8_t n) {
 }
 
 void moveCursorDown(uint8_t n) {
-  if (n + currentLineNum > LCD_NUMBER_OF_LINES - 1) {
+  if (n + currentLineNum < LCD_NUMBER_OF_LINES + 1) {
     currentLineNum += n;
   } else {
     currentLineNum = LCD_NUMBER_OF_LINES - 1;
@@ -417,7 +417,7 @@ void moveCursorDown(uint8_t n) {
 }
 
 void moveCursorForward(uint8_t n) {
-  if (n + currentLineChars > LCD_CHARACTERS_PER_LINE - 1) {
+  if (n + currentLineChars < LCD_CHARACTERS_PER_LINE + 1) {
     currentLineChars += n;
   } else {
     currentLineChars = LCD_CHARACTERS_PER_LINE - 1;
@@ -428,7 +428,7 @@ void moveCursorForward(uint8_t n) {
 
 void moveCursorBackward(uint8_t n) {
   if (n < currentLineChars + 1) {
-    currentLineChars += n;
+    currentLineChars -= n;
   } else {
     currentLineChars = 0;
   }

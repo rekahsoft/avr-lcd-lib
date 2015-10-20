@@ -78,44 +78,7 @@ int main(void) {
   //initLCDByInternalReset();
   flashLED(5); // DEBUG
 
-
-  writeStringToLCD("Backwards 4" CUB(4));
-  _delay_ms(5000);
-
-  clearDisplay();
-  writeStringToLCD("Backwards 3" CUB(3));
-  _delay_ms(5000);
-
-    clearDisplay();
-  writeStringToLCD("Backwards 2" CUB(2));
-  _delay_ms(5000);
-
-  clearDisplay();
-  writeStringToLCD("Backwards 1" CUB(1));
-  _delay_ms(5000);
-
-  clearDisplay();
-  writeStringToLCD("Forwards 4" CUF(4));
-  _delay_ms(5000);
-
-  /* writeStringToLCD(CNL(1)); */
-  /* _delay_ms(5000); */
-
-  /* writeStringToLCD(CUF(10)); */
-  /* _delay_ms(5000); */
-
-  /* writeStringToLCD(CPL(1)); */
-  /* _delay_ms(5000); */
-
-  /* writeStringToLCD(CHA(20)); */
-  /* _delay_ms(5000); */
-
-  /* writeStringToLCD(CUP(20,20)); */
-  /* _delay_ms(5000); */
-
-  /* writeStringToLCD(CUP(1,1)); */
-  /* _delay_ms(5000); */
-
+  writeStringToLCD(CUB(1));
 
   while (1) {
     serialChar = receiveByte();
@@ -125,21 +88,38 @@ int main(void) {
       writeStringToLCD("\r\n");
       transmitString("\n" CNL(1) "\r");
       break;
-      ;
+      ;;
     case '\f':
       writeCharToLCD(serialChar);
       transmitString(ED(2) CUP(1,1));
       break;
-      ;
+      ;;
     case 0x7f: // Backspace (sent as delete)
       writeStringToLCD("\b \b");
       transmitString(CUB(1) " " CUB(1));
       break;
-      ;
+      ;;
+    case '\e': // Beginning of ANSI escape
+      {
+        char j = receiveByte();
+
+        if (j == '[') {
+          char buf[7] = "\e[";
+          for (uint8_t i = 2, j = receiveByte(); i < 7 && j > 0x20 && j < 0x7e; i++, j = receiveByte()) {
+            buf[i] = j;
+            if (j > 0x40 && j < 0x7e) {
+              break;
+            }
+          }
+          writeStringToLCD(buf);
+        }
+        break;
+      }
+      ;;
     default:
       writeCharToLCD(serialChar);
       transmitByte(serialChar);   // Echo character back to serial console
-      ;
+      ;;
     }
   }
 

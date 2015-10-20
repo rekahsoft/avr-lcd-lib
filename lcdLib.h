@@ -137,7 +137,7 @@ void writeCharToLCD(char);
 /**
   Writes a string to the LCD starting from the current cursor position.
  */
-void writeStringToLCD(const char*);
+void writeStringToLCD(char*);
 
 //-----------------------------------------------------------------------------------------------
 // LCD command functions
