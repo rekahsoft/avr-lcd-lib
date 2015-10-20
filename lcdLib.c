@@ -271,7 +271,11 @@ uint8_t readASCIINumber(char* str, uint8_t* found_num, char** new_loc) {
   }
   *new_loc = str;
 
-  return nums[0]*100 + nums[1]*10 + nums[2];
+  uint8_t ret = 0;
+  uint8_t i = *found_num - 1;
+  for (uint8_t fnd = 0; fnd < *found_num; fnd++)
+    ret += nums[fnd] * pow(10, i--);
+  return ret;
 }
 
 void writeStringToLCD(char* str) {
