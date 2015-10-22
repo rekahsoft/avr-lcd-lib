@@ -203,10 +203,8 @@ void writeCharToLCD(char c) {
       currentLineChars = 0;
     }
     break;
-    ;
   case '\a': // Alarm
     break;
-    ;
   case '\b': // Backspace (non-destructive)
     if (currentLineChars == 0 && currentLineNum == 0) {
       // At first line, first column; there is no where to move; do nothing
@@ -221,16 +219,13 @@ void writeCharToLCD(char c) {
     }
 
     break;
-    ;
   case '\r': // Carriage return
     writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[currentLineNum]);
     currentLineChars = 0;
     break;
-    ;
   case '\f': // Form feed
     clearDisplay();
     break;
-    ;
   default:
     if (currentLineChars == LCD_CHARACTERS_PER_LINE - 1 && currentLineNum == LCD_NUMBER_OF_LINES - 1) {
       clearDisplay();
@@ -245,7 +240,6 @@ void writeCharToLCD(char c) {
       writeCharToLCD_(c);
       currentLineChars++;
     }
-    ;
   }
 }
 
@@ -302,10 +296,8 @@ void writeStringToLCD(char* str) {
             num1 = fnd1 ? num1 : 1;
             setCursorPosition(num0, num1);
             break;
-            ;;
           default: // Invalid control character
             break;
-            ;;
           }
         } else if (*str != '\0') {
           // Read control character (between 0x40 - 0x7e) for single argument sequences
@@ -314,41 +306,33 @@ void writeStringToLCD(char* str) {
             num0 = fnd0 ? num0 : 1;
             moveCursorUp(num0);
             break;
-            ;;
           case 'B': // CUD - Cursor down
             num0 = fnd0 ? num0 : 1;
             moveCursorDown(num0);
             break;
-            ;;
           case 'C': // CUF - Cursor forward
             num0 = fnd0 ? num0 : 1;
             moveCursorForward(num0);
             break;
-            ;;
           case 'D': // CUB - Cursor back
             num0 = fnd0 ? num0 : 1;
             moveCursorBackward(num0);
             break;
-            ;;
           case 'E': // CNL - Cursor next line
             num0 = fnd0 ? num0 : 1;
             moveCursorNextLine(num0);
             break;
-            ;;
           case 'F': // CPL - Cursor previous line
             num0 = fnd0 ? num0 : 1;
             moveCursorPreviousLine(num0);
             break;
-            ;;
           case 'G': // CHA - Cursor horizontal absolute
             num0 = fnd0 ? num0 : 1;
             moveCursorToColumn(num0);
             break;
-            ;;
           default:  // Invalid control character
             writeCharToLCD(*str);
             break;
-            ;;
           }
         } else {
           return; // Invalid escape sequence (terminated early)

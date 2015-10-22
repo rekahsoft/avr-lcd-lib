@@ -73,17 +73,14 @@ int main(void) {
       writeStringToLCD("\r\n");
       transmitString("\n" CNL(1) "\r");
       break;
-      ;;
     case '\f':
       writeCharToLCD(serialChar);
       transmitString(ED(2) CUP(1,1));
       break;
-      ;;
     case 0x7f: // Backspace (sent as delete)
       writeStringToLCD("\b \b");
       transmitString(CUB(1) " " CUB(1));
       break;
-      ;;
     case '\e': // Beginning of ANSI escape
       {
         char j = receiveByte();
@@ -100,11 +97,9 @@ int main(void) {
         }
         break;
       }
-      ;;
     default:
       writeCharToLCD(serialChar);
       transmitByte(serialChar);   // Echo character back to serial console
-      ;;
     }
   }
 
