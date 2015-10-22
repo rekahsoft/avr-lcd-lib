@@ -411,7 +411,7 @@ void moveCursorUp(uint8_t n) {
 }
 
 void moveCursorDown(uint8_t n) {
-  if (n + currentLineNum < LCD_NUMBER_OF_LINES + 1) {
+  if (n + currentLineNum < LCD_NUMBER_OF_LINES) {
     currentLineNum += n;
   } else {
     currentLineNum = LCD_NUMBER_OF_LINES - 1;
@@ -421,7 +421,7 @@ void moveCursorDown(uint8_t n) {
 }
 
 void moveCursorForward(uint8_t n) {
-  if (n + currentLineChars < LCD_CHARACTERS_PER_LINE + 1) {
+  if (n + currentLineChars < LCD_CHARACTERS_PER_LINE) {
     currentLineChars += n;
   } else {
     currentLineChars = LCD_CHARACTERS_PER_LINE - 1;
@@ -441,7 +441,9 @@ void moveCursorBackward(uint8_t n) {
 }
 
 void moveCursorNextLine(uint8_t n) {
-  if (n + currentLineNum > LCD_NUMBER_OF_LINES - 1) {
+  currentLineChars = 0;
+
+  if (n + currentLineNum < LCD_NUMBER_OF_LINES) {
     currentLineNum += n;
   } else {
     currentLineNum = LCD_NUMBER_OF_LINES - 1;
@@ -451,6 +453,8 @@ void moveCursorNextLine(uint8_t n) {
 }
 
 void moveCursorPreviousLine(uint8_t n) {
+  currentLineChars = 0;
+
   if (n < currentLineNum + 1) {
     currentLineNum -= n;
   } else {
@@ -461,7 +465,7 @@ void moveCursorPreviousLine(uint8_t n) {
 }
 
 void moveCursorToColumn(uint8_t n) {
-  if (n < LCD_CHARACTERS_PER_LINE) {
+  if (n <= LCD_CHARACTERS_PER_LINE) {
     currentLineChars = n ? n - 1 : 0;
     writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
   } // else index out of range (off screen column)
