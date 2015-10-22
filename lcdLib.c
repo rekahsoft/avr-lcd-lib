@@ -292,7 +292,7 @@ void writeStringToLCD(char* str) {
         uint8_t fnd1;
         uint8_t num1;
         if (*str != '\0' && *str == ';') {
-          num1 = readASCIINumber(str, &fnd1, &str);
+          num1 = readASCIINumber(++str, &fnd1, &str);
 
           // Read control character (between 0x40 - 0x7e) for two argument sequences
           switch (*str) {
