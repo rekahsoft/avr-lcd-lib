@@ -104,8 +104,8 @@ int main(void) {
         char j = receiveByte();
 
         if (j == '[') {
-          char buf[7] = "\e[";
-          for (uint8_t i = 2, j = receiveByte(); i < 7 && j > 0x20 && j < 0x7e; i++, j = receiveByte()) {
+          char buf[11] = "\e[";
+          for (uint8_t i = 2, j = receiveByte(); i < 10 && j > 0x20 && j < 0x7e; i++, j = receiveByte()) {
             buf[i] = j;
             if (j > 0x40 && j < 0x7e) {
               break;
