@@ -50,26 +50,13 @@ void flashLED(uint8_t times) {
     times--;
   }
 }
-//--------------------------------------------------
 
-/*
-  Initialize previous, current, and next screen variables to spaces
-*/
-char* initScreenMem(const uint8_t len) {
-  char *scrn = (char*) malloc(len * sizeof(char));
-  for (uint8_t i = 0; i < len; i++) {
-    scrn[i] = ' ';
-  }
-  return scrn;
-}
+//--------------------------------------------------
 
 int main(void) {
   clock_prescale_set(clock_div_1);
   
   STATUS_LED_DDR |= 1 << STATUS_LED; // DEBUG
-
-  // Allocate and init first block of heap for storing LCD data
-  char* scrn = initScreenMem(LCD_CHARACTERS_PER_SCREEN);
 
   initUSART();
   char serialChar;
@@ -77,8 +64,6 @@ int main(void) {
   initLCD();
   //initLCDByInternalReset();
   flashLED(5); // DEBUG
-
-  writeStringToLCD(CUB(1));
 
   while (1) {
     serialChar = receiveByte();

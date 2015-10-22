@@ -316,7 +316,6 @@ void writeStringToLCD(char* str) {
             break;
             ;;
           case 'B': // CUD - Cursor down
-            PORTC ^= (1 << PC5);
             num0 = fnd0 ? num0 : 1;
             moveCursorDown(num0);
             break;
