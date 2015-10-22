@@ -27,8 +27,8 @@
 #include "lcdLib.h"
 
 // Globals
-volatile uint8_t currentLineNum   = 0;
-volatile uint8_t currentLineChars = 0;
+volatile uint8_t currentLineNum;
+volatile uint8_t currentLineChars;
 
 const uint8_t lineBeginnings[LCD_NUMBER_OF_LINES] = { LCD_LINE_BEGINNINGS };
 
