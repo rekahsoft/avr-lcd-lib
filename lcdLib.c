@@ -33,6 +33,8 @@ volatile uint8_t currentLineChars;
 volatile uint8_t saveCursorLineNum;
 volatile uint8_t saveCursorLineChars;
 
+volatile uint8_t lcdState;
+
 const uint8_t lineBeginnings[LCD_NUMBER_OF_LINES] = { LCD_LINE_BEGINNINGS };
 
 //------------------------------------------------------------------------------------------
@@ -288,6 +290,21 @@ void writeStringToLCD(char* str) {
         case 'u': // RCP - Restore cursor position
           restoreCursorPosition();
           return;
+        case '?': // DECTCEM
+          if (*(++str_ref) != '\0' && *str_ref == '2') {
+            if (*(++str_ref) != '\0' && *str_ref == '5') {
+              if (*(++str_ref) != '\0') {
+                if (*str_ref == 'l') {
+                  hideCursor();
+                } else if (*str_ref == 'h') {
+                  showCursor();
+                } else {
+                  // Invalid escape
+                }
+              } // Invalid escape (early termination)
+            } // Invalid escape
+          } // Invalid escape
+          return;
         default:
           break;
         }
@@ -479,6 +496,39 @@ void restoreCursorPosition() {
   currentLineChars = saveCursorLineChars;
   writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
 }
+
+void hideCursor(void) {
+  lcdState &= ~(1 << INSTR_DISPLAY_C);
+  writeLCDInstr(INSTR_DISPLAY | lcdState);
+}
+
+void showCursor(void) {
+  lcdState |= (1 << INSTR_DISPLAY_C);
+  writeLCDInstr(INSTR_DISPLAY | lcdState);
+}
+
+//-----------------------------------------------------------------------------------------------
+
+void blinkCursorOff(void) {
+  lcdState &= ~(1 << INSTR_DISPLAY_B);
+  writeLCDInstr(INSTR_DISPLAY | lcdState);
+}
+
+void blinkCursorOn(void) {
+  lcdState |= (1 << INSTR_DISPLAY_B);
+  writeLCDInstr(INSTR_DISPLAY | lcdState);
+}
+
+void displayOff(void) {
+  lcdState &= ~(1 << INSTR_DISPLAY_D);
+  writeLCDInstr(INSTR_DISPLAY | lcdState);
+}
+
+void displayOn(void) {
+  lcdState |= (1 << INSTR_DISPLAY_D);
+  writeLCDInstr(INSTR_DISPLAY | lcdState);
+}
+
 //-----------------------------------------------------------------------------------------------
 
 /* char readCharFromLCD(void) { */
@@ -594,7 +644,8 @@ void initLCD (void) {
   writeLCDInstr(INSTR_ENTRY_SET | (1 << INSTR_ENTRY_SET_ID));
 
   // Display on, cursor on, blink off
-  writeLCDInstr(INSTR_DISPLAY | (1 << INSTR_DISPLAY_D) | (1 << INSTR_DISPLAY_C));
+  lcdState = (1 << INSTR_DISPLAY_D) | (1 << INSTR_DISPLAY_C);
+  writeLCDInstr(INSTR_DISPLAY | lcdState);
 }
 
 /*

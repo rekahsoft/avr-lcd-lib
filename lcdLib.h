@@ -207,6 +207,16 @@ void moveCursorPreviousLine(uint8_t n);
  */
 void moveCursorToColumn(uint8_t n);
 
+/**
+   Hides the cursor
+ */
+void hideCursor(void);
+
+/**
+   Shows the cursor
+ */
+void showCursor(void);
+
 //-----------------------------------------------------------------------------------------------
 
 /*
