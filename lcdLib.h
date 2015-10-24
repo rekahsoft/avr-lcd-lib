@@ -139,6 +139,16 @@ void writeCharToLCD(char);
  */
 void writeStringToLCD(char*);
 
+/**
+   Saves the cursors current position.
+ */
+void saveCursorPosition(void);
+
+/**
+   Restores the last saved cursor position.
+ */
+void restoreCursorPosition(void);
+
 //-----------------------------------------------------------------------------------------------
 // LCD command functions
 

@@ -30,6 +30,9 @@
 volatile uint8_t currentLineNum;
 volatile uint8_t currentLineChars;
 
+volatile uint8_t saveCursorLineNum;
+volatile uint8_t saveCursorLineChars;
+
 const uint8_t lineBeginnings[LCD_NUMBER_OF_LINES] = { LCD_LINE_BEGINNINGS };
 
 //------------------------------------------------------------------------------------------
@@ -277,10 +280,22 @@ void writeStringToLCD(char* str) {
     // Check for ANSI CSI (Control Sequence Introducer)
     if (*str == '\e') {
       if (*(++str) != '\0' && *str == '[') {
+        char* str_ref = ++str;
+        switch (*str) {
+        case 's': // SCP - Save cursor position
+          saveCursorPosition();
+          return;
+        case 'u': // RCP - Restore cursor position
+          restoreCursorPosition();
+          return;
+        default:
+          break;
+        }
+
         // Read optional variable length number in ASCII (0x30 - 0x3f) where 0x3a - 0x3f are
         // ignored (they are used as flags by some terminals)
         uint8_t fnd0;
-        uint8_t num0 = readASCIINumber(++str, &fnd0, &str);
+        uint8_t num0 = readASCIINumber(str, &fnd0, &str);
 
         // Read optional (semicolon followed by optional variable length number)
         uint8_t fnd1;
@@ -454,6 +469,16 @@ void moveCursorToColumn(uint8_t n) {
   } // else index out of range (off screen column)
 }
 
+void saveCursorPosition() {
+  saveCursorLineNum = currentLineNum;
+  saveCursorLineChars = currentLineChars;
+}
+
+void restoreCursorPosition() {
+  currentLineNum = saveCursorLineNum;
+  currentLineChars = saveCursorLineChars;
+  writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
+}
 //-----------------------------------------------------------------------------------------------
 
 /* char readCharFromLCD(void) { */
