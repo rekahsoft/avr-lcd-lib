@@ -51,8 +51,8 @@
 
 // Cursor or display shift instruction and associated options
 #define INSTR_MOV_SHIFT      0x10
-#define INSTR_MOV_SHIFT_SC   0x08
-#define INSTR_MOV_SHIFT_RL   0x04
+#define INSTR_MOV_SHIFT_SC   3
+#define INSTR_MOV_SHIFT_RL   2
 
 // Function set instruction and associated options
 #define INSTR_FUNC_SET       0x20
