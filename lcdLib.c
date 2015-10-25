@@ -91,7 +91,7 @@ void loop_until_LCD_BF_clear(void) {
 }
 
 #ifdef FOUR_BIT_MODE
-void writeLCDNibble_(uint8_t b) {
+void writeLCDDBusNibble_(uint8_t b) {
   // Reset data lines to zeros
   LCD_DBUS7_PORT &= ~(1 << LCD_DBUS7);
   LCD_DBUS6_PORT &= ~(1 << LCD_DBUS6);
@@ -109,10 +109,10 @@ void writeLCDNibble_(uint8_t b) {
 }
 #endif
 
-void writeLCDByte_(uint8_t b) {
+void writeLCDDBusByte_(uint8_t b) {
 #ifdef FOUR_BIT_MODE
-  writeLCDNibble_(b);
-  writeLCDNibble_(b << 4);
+  writeLCDDBusNibble_(b);
+  writeLCDDBusNibble_(b << 4);
 #elif defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
   // Reset data lines to zeros
   LCD_DBUS7_PORT &= ~(1 << LCD_DBUS7);
@@ -141,22 +141,22 @@ void writeLCDByte_(uint8_t b) {
 #endif
 }
 
+void writeLCDDBusByte(uint8_t b) {
+  loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
+  writeLCDDBusByte_(b);
+}
+
 /*
   Sets RS=RW=0 and writes the given 8 bit integer to the LCD databus. In the default 8-bit mode
   and EIGHT_BIT_ARBITRARY_PIN_MODE, the given data is written in one cycle using the
-  writeLCDByte_ function. In FOUR_BIT_MODE however, the given data is written in two cycles
-  using two successive calls to the writeLCDNibble_ function.
+  writeLCDDBusByte_ function. In FOUR_BIT_MODE however, the given data is written in two cycles
+  using two successive calls to the writeLCDDBusNibble_ function.
 */
 void writeLCDInstr_(uint8_t instr) {
   LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
   LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
 
-#ifdef FOUR_BIT_MODE
-  writeLCDNibble_(instr);
-  writeLCDNibble_(instr << 4);
-#else
-  writeLCDByte_(instr);
-#endif
+  writeLCDDBusByte_(instr);
 }
 
 void writeLCDInstr(uint8_t instr) {
@@ -167,19 +167,14 @@ void writeLCDInstr(uint8_t instr) {
 /*
   Sets RS=1, RW=0 and accepts a char (8 bit) and outputs it to the current cursor position of
   the LCD. In the default 8-bit mode and EIGHT_BIT_ARBITRARY_PIN_MODE, the given data is
-  written in one cycle using the writeLCDByte_ function. In FOUR_BIT_MODE however, the given
-  data is written in two cycles using two successive calls to the writeLCDNibble_ function.
+  written in one cycle using the writeLCDDBusByte_ function. In FOUR_BIT_MODE however, the given
+  data is written in two cycles using two successive calls to the writeLCDDBusNibble_ function.
 */
 void writeCharToLCD_(char c) {
   LCD_RS_PORT |= (1 << LCD_RS);  // RS=1
   LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
 
-#ifdef FOUR_BIT_MODE
-  writeLCDNibble_(c);
-  writeLCDNibble_(c << 4);
-#else
-  writeLCDByte_(c);
-#endif
+  writeLCDDBusByte_(c);
 }
 
 /*
@@ -710,9 +705,9 @@ static inline void softwareLCDInitPulse(void) {
   LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
 
 #ifdef FOUR_BIT_MODE
-  writeLCDNibble_(CMD_INIT);
+  writeLCDDBusNibble_(CMD_INIT);
 #else
-  writeLCDByte_(CMD_INIT);
+  writeLCDDBusByte_(CMD_INIT);
 #endif
 }
 
@@ -731,7 +726,7 @@ void initLCD (void) {
 
 #if defined (FOUR_BIT_MODE)
   // Function Set (4-bit interface; 2 lines with 5x7 dot character font)
-  writeLCDNibble_(CMD_INIT_FOUR_BIT);
+  writeLCDDBusNibble_(CMD_INIT_FOUR_BIT);
   writeLCDInstr_(CMD_INIT_FOUR_BIT | (1 << INSTR_FUNC_SET_N));
 #else
   // Function set (8-bit interface; 2 lines with 5x7 dot character font)

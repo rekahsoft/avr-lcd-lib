@@ -94,7 +94,7 @@ void loop_until_LCD_BF_clear(void);
   Note: this is only defined in FOUR_BIT_MODE
  */
 #ifdef FOUR_BIT_MODE
-void writeLCDNibble_(uint8_t);
+void writeLCDDBusNibble_(uint8_t);
 #endif
 
 /**
@@ -103,7 +103,13 @@ void writeLCDNibble_(uint8_t);
   This function does not ensure the LCD is ready to accept new data and thus needs to
   be handled by the caller.
  */
-void writeLCDByte_(uint8_t);
+void writeLCDDBusByte_(uint8_t);
+
+/**
+   Given an 8 bit integer, writes it to the LCD data bus, regardless of its
+   configuration (default 8-bit mode, 8-bit arbitrary pin mode and 4-bit mode).
+ */
+void writeLCDDBusByte(uint8_t b);
 
 /**
   Given a 8 bit integer representing a LCD instruction, sends it to the LCD display.
