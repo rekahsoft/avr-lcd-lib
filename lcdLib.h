@@ -208,6 +208,32 @@ void moveCursorPreviousLine(uint8_t n);
 void moveCursorToColumn(uint8_t n);
 
 /**
+   Scroll whole page up by n lines. New lines are added at the bottom.
+ */
+void scrollUp(uint8_t n);
+
+/**
+   Scroll whole page down by n lines. New lines are added at the top.
+ */
+void scrollDown(uint8_t n);
+
+/**
+   Clears part or all of screen dependent on the value of n:
+   0 or missing: clear from cursor to end of screen
+   1: clear from cursor to end of screen
+   2: clear entire screen
+ */
+void eraseDisplay(uint8_t n);
+
+/**
+   Erases part of a line dependent on the value of n:
+   0 or missing: clear from cursor to end of the line
+   1: clear from cursor to beginning of the line
+   2: clear entire line
+ */
+void eraseInline(uint8_t n);
+
+/**
    Hides the cursor
  */
 void hideCursor(void);
@@ -216,6 +242,28 @@ void hideCursor(void);
    Shows the cursor
  */
 void showCursor(void);
+
+//-----------------------------------------------------------------------------------------------
+
+/**
+   Turns the cursor blink off.
+ */
+void blinkCursorOff(void);
+
+/**
+   Turns the cursor blink on.
+ */
+void blinkCursorOn(void);
+
+/**
+   Turns the display off.
+ */
+void displayOff(void);
+
+/**
+   Turns the display on.
+ */
+void displayOn(void);
 
 //-----------------------------------------------------------------------------------------------
 

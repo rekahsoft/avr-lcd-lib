@@ -202,10 +202,13 @@ void writeCharToLCD(char c) {
   switch (c) {
   case '\n': // Line feed
     if (currentLineNum == LCD_NUMBER_OF_LINES - 1) {
-      clearDisplay();
-    } else {
-      writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[++currentLineNum]);
+      scrollUp(1);
+
       currentLineChars = 0;
+      writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[currentLineNum]);
+    } else {
+      currentLineChars = 0;
+      writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[++currentLineNum]);
     }
     break;
   case '\a': // Alarm
@@ -231,14 +234,20 @@ void writeCharToLCD(char c) {
   case '\f': // Form feed
     clearDisplay();
     break;
-  default:
+  default:   // Printable character
     if (currentLineChars == LCD_CHARACTERS_PER_LINE - 1 && currentLineNum == LCD_NUMBER_OF_LINES - 1) {
-      clearDisplay();
+      loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
+      writeCharToLCD_(c);
+
+      scrollUp(1);
+
+      currentLineChars = 0;
+      writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[currentLineNum]);
     } else if (currentLineChars == LCD_CHARACTERS_PER_LINE - 1) {
       loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
       writeCharToLCD_(c);
-      currentLineChars = 0;
 
+      currentLineChars = 0;
       writeLCDInstr(INSTR_DDRAM_ADDR | lineBeginnings[++currentLineNum]);
     } else {
       loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
@@ -251,8 +260,9 @@ void writeCharToLCD(char c) {
 /*
   Given a character string, and a uint8_t pointer, reads the character string until a
   non-numerical ASCII character, returning the integer representation of the number read. At
-  the end of the functions execution, the found_num uint8_t pointer will indicate how many
-  digits were read.
+  the end of the functions execution, the found_num uint8_t* will be updated to indicate how
+  many digits were read. The new_loc char** will be updated with the new parsing position in
+  the string.
  */
 uint8_t readASCIINumber(char* str, uint8_t* found_num, char** new_loc) {
   uint8_t nums[3];
@@ -361,6 +371,51 @@ void writeStringToLCD(char* str) {
           case 'G': // CHA - Cursor horizontal absolute
             num0 = fnd0 ? num0 : 1;
             moveCursorToColumn(num0);
+            break;
+          case 'J': // ED - Erase display
+            num0 = fnd0 ? num0 : 1;
+            eraseDisplay(num0);
+            break;
+          case 'K': // EL - Erase in line
+            num0 = fnd0 ? num0 : 1;
+            eraseInline(num0);
+            break;
+          case 'S': // SU - Scroll up
+            num0 = fnd0 ? num0 : 1;
+            scrollUp(num0);
+            break;
+          case 'T': // SD Scroll down
+            num0 = fnd0 ? num0 : 1;
+            scrollDown(num0);
+            break;
+          case 'm': // SGR - Select graphic rendition (single optional argument)
+            break;
+          case ';': // SGR - Select graphic rendition (multiple arguments)
+            if (fnd0) {
+              while (fnd0) {
+                readASCIINumber(++str, &fnd0, &str);
+                if (fnd0) {
+                  if (*str == 'm') {
+                    break; // Valid SGR
+                  } else if (*str == ';') {
+                    continue; // More SGR parameters yet
+                  } else {
+                    break; // Invalid escape
+                  }
+                } else {
+                  // Invalid escape; expected SGR parameter
+                }
+              }
+            } else {
+              // Invalid escape; expected first SGR parameter but none given
+            }
+            break;
+          case 'n': // DSR - Device status report
+            if (fnd0 && num0 == 6) {
+              // Valid DSR
+            } else {
+              // Invalid DSR
+            }
             break;
           default:  // Invalid control character
             writeCharToLCD(*str);
@@ -484,6 +539,58 @@ void moveCursorToColumn(uint8_t n) {
     currentLineChars = n ? n - 1 : 0;
     writeLCDInstr(INSTR_DDRAM_ADDR | (lineBeginnings[currentLineNum] + currentLineChars));
   } // else index out of range (off screen column)
+}
+
+void eraseDisplay(uint8_t n) {
+  switch (n) {
+  case 0: // Clear from cursor to end of screen
+  case 1: // Clear from cursor to beginning of screen
+  case 2: // Clear entire screen
+    clearDisplay();
+    break;
+  default: // Invalid argument; do nothing
+    break;
+  }
+}
+
+void eraseInline(uint8_t n) {
+  char pos_x = currentLineChars;
+
+  // BUG: when cursor is on the last character of the last line, writing currentLineChars
+  // number of spaces will currently clear the screen due to the way writeCharToLCD handles
+  // text wrapping. Specifically after the last character (bottom right) of the screen is
+  // written the screen is automatically cleared.
+  switch (n) {
+  case 0: // Clear from cursor to end of line
+    for (uint8_t i = 0; i < (LCD_CHARACTERS_PER_LINE - currentLineChars); i++)
+      writeCharToLCD(' ');
+
+    // Move cursor back one char and line so its in its original position
+    setCursorPosition(pos_x, currentLineNum);
+    break;
+  case 1: // Clear from cursor to beginning of line
+    writeCharToLCD('\r');
+    for (uint8_t i = 0; i < pos_x; i++)
+      writeCharToLCD(' ');
+    moveCursorToColumn(pos_x + 1);
+
+    break;
+  case 2: // Clear entire line
+    writeCharToLCD('\r');
+    for (uint8_t i = 0; i < LCD_CHARACTERS_PER_LINE; i++)
+      writeCharToLCD(' ');
+
+    // Move cursor back one line so its in its original position
+    setCursorPosition(pos_x + 1, currentLineNum);
+  default: // Invalid argument; do nothing
+    break;
+  }
+}
+
+void scrollUp(uint8_t n) {
+}
+
+void scrollDown(uint8_t n) {
 }
 
 void saveCursorPosition() {
