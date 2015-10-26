@@ -21,33 +21,46 @@
  * Date: Sep 29, 2015
  */
 
+// Includes -----------------------------------------------------------------------------------
+#include <math.h>
+#include <avr/io.h>
 #include <util/delay.h>
 
-// Include header
 #include "lcdLib.h"
 
-// Globals
-volatile uint8_t currentLineNum;
-volatile uint8_t currentLineChars;
+//---------------------------------------------------------------------------------------------
+// Static global variables
 
-volatile uint8_t saveCursorLineNum;
-volatile uint8_t saveCursorLineChars;
+static volatile uint8_t currentLineNum;
+static volatile uint8_t currentLineChars;
 
-volatile uint8_t lcdState;
+static volatile uint8_t saveCursorLineNum;
+static volatile uint8_t saveCursorLineChars;
 
-const uint8_t lineBeginnings[LCD_NUMBER_OF_LINES] = { LCD_LINE_BEGINNINGS };
+static volatile uint8_t lcdState;
 
-//------------------------------------------------------------------------------------------
-// Function definitions
+static const uint8_t lineBeginnings[LCD_NUMBER_OF_LINES] = { LCD_LINE_BEGINNINGS };
 
-void clkLCD(void) {
+//---------------------------------------------------------------------------------------------
+// Static functions
+
+/*
+  Bring LCD_ENABLE line high, wait for LCD_ENABLE_HIGH_DELAY; then bring LCD_ENABLE line low
+  and wait for LCD_ENABLE_LOW_DELAY.
+
+  Note: LCD_ENABLE, LCD_ENABLE_HIGH_DELAY, and LCD_ENABLE_LOW_DELAY must be defined in lcdLibConfig.h
+ */
+static void clkLCD(void) {
   LCD_ENABLE_PORT |= (1 << LCD_ENABLE);
   _delay_us(LCD_ENABLE_HIGH_DELAY);
   LCD_ENABLE_PORT &= ~(1 << LCD_ENABLE);
   _delay_us(LCD_ENABLE_LOW_DELAY);
 }
 
-void loop_until_LCD_BF_clear(void) {
+/*
+  Wait until LCD_BF (busy flag) is cleared (low).
+ */
+static void loop_until_LCD_BF_clear(void) {
   uint8_t bf;
 
   LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
@@ -90,8 +103,13 @@ void loop_until_LCD_BF_clear(void) {
 #endif
 }
 
+/*
+  Given a 8 bit integer, writes the four MSB's (one nibble) to the LCD data bus.
+
+  Note: this is only defined in FOUR_BIT_MODE
+ */
 #ifdef FOUR_BIT_MODE
-void writeLCDDBusNibble_(uint8_t b) {
+static void writeLCDDBusNibble_(uint8_t b) {
   // Reset data lines to zeros
   LCD_DBUS7_PORT &= ~(1 << LCD_DBUS7);
   LCD_DBUS6_PORT &= ~(1 << LCD_DBUS6);
@@ -109,7 +127,17 @@ void writeLCDDBusNibble_(uint8_t b) {
 }
 #endif
 
-void writeLCDDBusByte_(uint8_t b) {
+/*
+  Given an 8 bit integer, writes it to the LCD data bus, regardless of its
+  configuration (default 8-bit mode, 8-bit arbitrary pin mode and 4-bit mode). In the default
+  8-bit mode and EIGHT_BIT_ARBITRARY_PIN_MODE, the given data is written in one cycle using the
+  writeLCDDBusByte_ function. In FOUR_BIT_MODE however, the given data is written in two cycles
+  using two successive calls to the writeLCDDBusNibble_ function.
+
+  This function does not ensure the LCD is ready to accept new data and thus needs to
+  be handled by the caller.
+ */
+static void writeLCDDBusByte_(uint8_t b) {
 #ifdef FOUR_BIT_MODE
   writeLCDDBusNibble_(b);
   writeLCDDBusNibble_(b << 4);
@@ -141,25 +169,26 @@ void writeLCDDBusByte_(uint8_t b) {
 #endif
 }
 
-void writeLCDDBusByte(uint8_t b) {
-  loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
-  writeLCDDBusByte_(b);
-}
-
 /*
-  Sets RS=RW=0 and writes the given 8 bit integer to the LCD databus. In the default 8-bit mode
-  and EIGHT_BIT_ARBITRARY_PIN_MODE, the given data is written in one cycle using the
-  writeLCDDBusByte_ function. In FOUR_BIT_MODE however, the given data is written in two cycles
-  using two successive calls to the writeLCDDBusNibble_ function.
+  Given a 8 bit integer representing a LCD instruction, sends it to the LCD display.
+
+  Sets RS=RW=0 and writes the given 8 bit integer to the LCD databus.
+
+  Note that this function does not ensure the LCD is ready to accept a new instruction and thus
+  needs to be handled by the caller.
 */
-void writeLCDInstr_(uint8_t instr) {
+static void writeLCDInstr_(uint8_t instr) {
   LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
   LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
 
   writeLCDDBusByte_(instr);
 }
 
-void writeLCDInstr(uint8_t instr) {
+/*
+  Given a 8 bit integer representing a LCD instruction, waits until the LCD is ready and sends
+  the instruction.
+ */
+static inline void writeLCDInstr(uint8_t instr) {
   loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
   writeLCDInstr_(instr);
 }
@@ -170,11 +199,148 @@ void writeLCDInstr(uint8_t instr) {
   written in one cycle using the writeLCDDBusByte_ function. In FOUR_BIT_MODE however, the given
   data is written in two cycles using two successive calls to the writeLCDDBusNibble_ function.
 */
-void writeCharToLCD_(char c) {
+static void writeCharToLCD_(char c) {
   LCD_RS_PORT |= (1 << LCD_RS);  // RS=1
   LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
 
   writeLCDDBusByte_(c);
+}
+
+/*
+  Given a character string, and a uint8_t pointer, reads the character string until a
+  non-numerical ASCII character, returning the integer representation of the number read. At
+  the end of the functions execution, the found_num uint8_t* will be updated to indicate how
+  many digits were read. The new_loc char** will be updated with the new parsing position in
+  the string.
+ */
+static uint8_t readASCIINumber(char* str, uint8_t* found_num, char** new_loc) {
+  uint8_t nums[3];
+
+  *found_num = 0;
+  while (*str != '\0' && *found_num < 3) {
+    if (*str >= 0x30 && *str <= 0x39) {
+      // Use *str as a number (specified in ASCII)
+      nums[(*found_num)++] = *str - 0x30;
+    } else {
+      break;
+    }
+
+    str++;
+  }
+  *new_loc = str;
+
+  uint8_t ret = 0;
+  uint8_t i = *found_num - 1;
+  for (uint8_t fnd = 0; fnd < *found_num; fnd++)
+    ret += nums[fnd] * pow(10, i--);
+  return ret;
+}
+
+/*
+  Set all pins of LCD_DBUS, as well as pins LCD_RS, and LCD_RW as outputs
+*/
+static inline void enableLCDOutput(void) {
+  LCD_RS_DDR |= (1 << LCD_RS);
+  LCD_RW_DDR |= (1 << LCD_RW);
+  LCD_ENABLE_DDR |= (1 << LCD_ENABLE);
+
+#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
+  LCD_DBUS7_DDR |= (1 << LCD_DBUS7);
+  LCD_DBUS6_DDR |= (1 << LCD_DBUS6);
+  LCD_DBUS5_DDR |= (1 << LCD_DBUS5);
+  LCD_DBUS4_DDR |= (1 << LCD_DBUS4);
+#ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
+  LCD_DBUS3_DDR |= (1 << LCD_DBUS3);
+  LCD_DBUS2_DDR |= (1 << LCD_DBUS2);
+  LCD_DBUS1_DDR |= (1 << LCD_DBUS1);
+  LCD_DBUS0_DDR |= (1 << LCD_DBUS0);
+#endif
+#else
+  LCD_DBUS_DDR = 0xff;
+#endif
+}
+
+/*
+  Set all pins of LCD_DBUS as well as LCD_RS, and LCD_RW as inputs (disabling their output)
+*/
+static inline void disableLCDOutput(void) {
+  LCD_RS_DDR &= ~(1 << LCD_RS);
+  LCD_RW_DDR &= ~(1 << LCD_RW);
+  LCD_ENABLE_DDR &= ~(1 << LCD_ENABLE);
+
+#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
+  LCD_DBUS7_DDR &= ~(1 << LCD_DBUS7);
+  LCD_DBUS6_DDR &= ~(1 << LCD_DBUS6);
+  LCD_DBUS5_DDR &= ~(1 << LCD_DBUS5);
+  LCD_DBUS4_DDR &= ~(1 << LCD_DBUS4);
+#ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
+  LCD_DBUS3_DDR &= ~(1 << LCD_DBUS3);
+  LCD_DBUS2_DDR &= ~(1 << LCD_DBUS2);
+  LCD_DBUS1_DDR &= ~(1 << LCD_DBUS1);
+  LCD_DBUS0_DDR &= ~(1 << LCD_DBUS0);
+#endif
+#else
+  LCD_DBUS_DDR = 0;
+#endif
+}
+
+/*
+  Set RS=RW=0 and write the CMD_INIT command to the LCD data bus. Note that an appropriate
+  pause must follow before sending new commands to the LCD using writeLCD*_ functions.
+ */
+static inline void softwareLCDInitPulse(void) {
+  enableLCDOutput();
+  LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
+  LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
+
+#ifdef FOUR_BIT_MODE
+  writeLCDDBusNibble_(CMD_INIT);
+#else
+  writeLCDDBusByte_(CMD_INIT);
+#endif
+}
+
+
+//---------------------------------------------------------------------------------------------
+// Library function definitions
+
+/*
+  Do software initialization as specified by the datasheet
+*/
+void initLCD(void) {
+  enableLCDOutput();
+
+  _delay_us(LCD_INIT_DELAY0); // Wait minimum 15ms as per datasheet
+  softwareLCDInitPulse();
+  _delay_us(LCD_INIT_DELAY1); // Wait minimum 4.1ms as per datasheet
+  softwareLCDInitPulse();
+  _delay_us(LCD_INIT_DELAY2); // Wait minimum 100us as per datasheet
+  softwareLCDInitPulse();
+
+#if defined (FOUR_BIT_MODE)
+  // Function Set (4-bit interface; 2 lines with 5x7 dot character font)
+  writeLCDDBusNibble_(CMD_INIT_FOUR_BIT);
+  writeLCDInstr_(CMD_INIT_FOUR_BIT | (1 << INSTR_FUNC_SET_N));
+#else
+  // Function set (8-bit interface; 2 lines with 5x7 dot character font)
+  // RS=RW=0, DBUS=b00111000,0x38
+  writeLCDInstr_(INSTR_FUNC_SET | (1 << INSTR_FUNC_SET_DL) | (1 << INSTR_FUNC_SET_N));
+#endif
+
+  /* BF now can be checked */
+
+  // Set functions of LCD
+  writeLCDInstr(INSTR_DISPLAY); // Display off
+
+  // Clear display
+  writeLCDInstr(CMD_CLEAR_DISPLAY);
+
+  // Increment mode, no shift
+  writeLCDInstr(INSTR_ENTRY_SET | (1 << INSTR_ENTRY_SET_ID));
+
+  // Display on, cursor on, blink off
+  lcdState = (1 << INSTR_DISPLAY_D) | (1 << INSTR_DISPLAY_C);
+  writeLCDInstr(INSTR_DISPLAY | lcdState);
 }
 
 /*
@@ -250,36 +416,6 @@ void writeCharToLCD(char c) {
       currentLineChars++;
     }
   }
-}
-
-/*
-  Given a character string, and a uint8_t pointer, reads the character string until a
-  non-numerical ASCII character, returning the integer representation of the number read. At
-  the end of the functions execution, the found_num uint8_t* will be updated to indicate how
-  many digits were read. The new_loc char** will be updated with the new parsing position in
-  the string.
- */
-uint8_t readASCIINumber(char* str, uint8_t* found_num, char** new_loc) {
-  uint8_t nums[3];
-
-  *found_num = 0;
-  while (*str != '\0' && *found_num < 3) {
-    if (*str >= 0x30 && *str <= 0x39) {
-      // Use *str as a number (specified in ASCII)
-      nums[(*found_num)++] = *str - 0x30;
-    } else {
-      break;
-    }
-
-    str++;
-  }
-  *new_loc = str;
-
-  uint8_t ret = 0;
-  uint8_t i = *found_num - 1;
-  for (uint8_t fnd = 0; fnd < *found_num; fnd++)
-    ret += nums[fnd] * pow(10, i--);
-  return ret;
 }
 
 void writeStringToLCD(char* str) {
@@ -427,6 +563,9 @@ void writeStringToLCD(char* str) {
     str++;
   }
 }
+
+//---------------------------------------------------------------------------------------------
+// LCD command functions (all have associated ANSI escape)
 
 /*
   Writes the CMD_CLEAR_DISPLAY command to the LCD using writeLCDINSTR, and clears the local
@@ -610,6 +749,7 @@ void showCursor(void) {
 }
 
 //-----------------------------------------------------------------------------------------------
+// Utility functions (with no associated ASCII or ANSI escape)
 
 void blinkCursorOff(void) {
   lcdState &= ~(1 << INSTR_DISPLAY_B);
@@ -645,110 +785,9 @@ void displayOn(void) {
 /*   return c; */
 /* } */
 
-//-----------------------------------------------------------------------------------------------
 
-/*
-  Set all pins of LCD_DBUS, as well as pins LCD_RS, and LCD_RW as outputs
-*/
-static inline void enableLCDOutput(void) {
-  LCD_RS_DDR |= (1 << LCD_RS);
-  LCD_RW_DDR |= (1 << LCD_RW);
-  LCD_ENABLE_DDR |= (1 << LCD_ENABLE);
-
-#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
-  LCD_DBUS7_DDR |= (1 << LCD_DBUS7);
-  LCD_DBUS6_DDR |= (1 << LCD_DBUS6);
-  LCD_DBUS5_DDR |= (1 << LCD_DBUS5);
-  LCD_DBUS4_DDR |= (1 << LCD_DBUS4);
-#ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
-  LCD_DBUS3_DDR |= (1 << LCD_DBUS3);
-  LCD_DBUS2_DDR |= (1 << LCD_DBUS2);
-  LCD_DBUS1_DDR |= (1 << LCD_DBUS1);
-  LCD_DBUS0_DDR |= (1 << LCD_DBUS0);
-#endif
-#else
-  LCD_DBUS_DDR = 0xff;
-#endif
-}
-
-/*
-  Set all pins of LCD_DBUS as well as LCD_RS, and LCD_RW as inputs (disabling their output)
-*/
-static inline void disableLCDOutput(void) {
-  LCD_RS_DDR &= ~(1 << LCD_RS);
-  LCD_RW_DDR &= ~(1 << LCD_RW);
-  LCD_ENABLE_DDR &= ~(1 << LCD_ENABLE);
-
-#if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
-  LCD_DBUS7_DDR &= ~(1 << LCD_DBUS7);
-  LCD_DBUS6_DDR &= ~(1 << LCD_DBUS6);
-  LCD_DBUS5_DDR &= ~(1 << LCD_DBUS5);
-  LCD_DBUS4_DDR &= ~(1 << LCD_DBUS4);
-#ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
-  LCD_DBUS3_DDR &= ~(1 << LCD_DBUS3);
-  LCD_DBUS2_DDR &= ~(1 << LCD_DBUS2);
-  LCD_DBUS1_DDR &= ~(1 << LCD_DBUS1);
-  LCD_DBUS0_DDR &= ~(1 << LCD_DBUS0);  
-#endif
-#else
-  LCD_DBUS_DDR = 0;
-#endif
-}
-
-/*
-  Set RS=RW=0 and write the CMD_INIT command to the LCD data bus. Note that an appropriate
-  pause must follow before sending new commands to the LCD using writeLCD*_ functions.
- */
-static inline void softwareLCDInitPulse(void) {
-  enableLCDOutput();
-  LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
-  LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
-
-#ifdef FOUR_BIT_MODE
-  writeLCDDBusNibble_(CMD_INIT);
-#else
-  writeLCDDBusByte_(CMD_INIT);
-#endif
-}
-
-/*
-  Do software initialization as specified by the datasheet
-*/
-void initLCD (void) {
-  enableLCDOutput();
-
-  _delay_us(LCD_INIT_DELAY0); // Wait minimum 15ms as per datasheet
-  softwareLCDInitPulse();
-  _delay_us(LCD_INIT_DELAY1); // Wait minimum 4.1ms as per datasheet
-  softwareLCDInitPulse();
-  _delay_us(LCD_INIT_DELAY2); // Wait minimum 100us as per datasheet
-  softwareLCDInitPulse();
-
-#if defined (FOUR_BIT_MODE)
-  // Function Set (4-bit interface; 2 lines with 5x7 dot character font)
-  writeLCDDBusNibble_(CMD_INIT_FOUR_BIT);
-  writeLCDInstr_(CMD_INIT_FOUR_BIT | (1 << INSTR_FUNC_SET_N));
-#else
-  // Function set (8-bit interface; 2 lines with 5x7 dot character font)
-  // RS=RW=0, DBUS=b00111000,0x38
-  writeLCDInstr_(INSTR_FUNC_SET | (1 << INSTR_FUNC_SET_DL) | (1 << INSTR_FUNC_SET_N));
-#endif
-
-  /* BF now can be checked */
-
-  // Set functions of LCD
-  writeLCDInstr(INSTR_DISPLAY); // Display off
-
-  // Clear display
-  writeLCDInstr(CMD_CLEAR_DISPLAY);
-
-  // Increment mode, no shift
-  writeLCDInstr(INSTR_ENTRY_SET | (1 << INSTR_ENTRY_SET_ID));
-
-  // Display on, cursor on, blink off
-  lcdState = (1 << INSTR_DISPLAY_D) | (1 << INSTR_DISPLAY_C);
-  writeLCDInstr(INSTR_DISPLAY | lcdState);
-}
+//---------------------------------------------------------------------------------------------
+// Advanced functions for special cases
 
 /*
   Initialize LCD using the internal reset circuitry.

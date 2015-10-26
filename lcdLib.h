@@ -22,116 +22,20 @@
  * @brief Functions to initialize, and operate a character LCD.
  */
 
-// Includes -------------------------------------------------------------------------------
+#ifndef LCD_LIB_H
+#define LCD_LIB_H
 
-#include <avr/io.h>
-#include <math.h>
+// Includes -----------------------------------------------------------------------------------
+#include "lcd_instr.h"
 #include "lcdLibConfig.h"
 
-//------------------------------------------------------------------------------------------
-
-/* LCD Commands */
-
-// Simple commands with no options
-#define CMD_INIT             0x30
-#define CMD_INIT_FOUR_BIT    0x20
-#define CMD_CLEAR_DISPLAY    0x01
-#define CMD_RETURN_HOME      0x02
-
-// Entry Set instruction and associated options
-#define INSTR_ENTRY_SET      0x04
-#define INSTR_ENTRY_SET_ID   1
-#define INSTR_ENTRY_SET_S    0
-
-// Display control instruction and associated options
-#define INSTR_DISPLAY        0x08
-#define INSTR_DISPLAY_D      2
-#define INSTR_DISPLAY_C      1
-#define INSTR_DISPLAY_B      0
-
-// Cursor or display shift instruction and associated options
-#define INSTR_MOV_SHIFT      0x10
-#define INSTR_MOV_SHIFT_SC   3
-#define INSTR_MOV_SHIFT_RL   2
-
-// Function set instruction and associated options
-#define INSTR_FUNC_SET       0x20
-#define INSTR_FUNC_SET_DL    4
-#define INSTR_FUNC_SET_N     3
-#define INSTR_FUNC_SET_F     2
-
-// Set CG RAM address instruction
-#define INSTR_CGRAM_ADDR     0x60
-
-// Set DD RAM address instruction
-#define INSTR_DDRAM_ADDR     0x80
-
-//-------------------------------------
-
-
-#define LCD_CHARACTERS_PER_SCREEN (LCD_CHARACTERS_PER_LINE * LCD_NUMBER_OF_LINES)
-
-
-//------------------------------------
-// Function definitions
+//---------------------------------------------------------------------------------------------
+// Library function declarations
 
 /**
-  Bring LCD_ENABLE line high, wait for LCD_ENABLE_HIGH_DELAY; then bring LCD_ENABLE line low
-  and wait for LCD_ENABLE_LOW_DELAY.
-
-  Note: LCD_ENABLE, LCD_ENABLE_HIGH_DELAY, and LCD_ENABLE_LOW_DELAY must be defined in lcdLibConfig.h
- */
-void clkLCD(void);
-
-/**
-  Wait until LCD_BF (busy flag) is cleared (low).
- */
-void loop_until_LCD_BF_clear(void);
-
-/**
-  Given a 8 bit integer, writes the four MSB's (one nibble) to the LCD data bus.
-
-  Note: this is only defined in FOUR_BIT_MODE
- */
-#ifdef FOUR_BIT_MODE
-void writeLCDDBusNibble_(uint8_t);
-#endif
-
-/**
-  Given an 8 bit integer, writes it to the LCD data bus.
-
-  This function does not ensure the LCD is ready to accept new data and thus needs to
-  be handled by the caller.
- */
-void writeLCDDBusByte_(uint8_t);
-
-/**
-   Given an 8 bit integer, writes it to the LCD data bus, regardless of its
-   configuration (default 8-bit mode, 8-bit arbitrary pin mode and 4-bit mode).
- */
-void writeLCDDBusByte(uint8_t b);
-
-/**
-  Given a 8 bit integer representing a LCD instruction, sends it to the LCD display.
-
-  Note that this function does not ensure the LCD is ready to accept a new instruction and thus
-  needs to be handled by the caller.
- */
-void writeLCDInstr_(uint8_t);
-
-/**
-  Given a 8 bit integer representing a LCD instruction, waits until the LCD is ready and sends
-  the instruction.
- */
-void writeLCDInstr(uint8_t);
-
-/**
-  Writes a character to the LCD display at the current cursor position.
-
-  Note that this function does not ensure the LCD is ready to accept a new character and thus
-  needs to be handled by the caller.
- */
-void writeCharToLCD_(char);
+  Initialize the LCD display via software initialization as specified by the datasheet.
+*/
+void initLCD(void);
 
 /**
   Writes a character to the LCD display at the current cursor position after the LCD display is
@@ -145,18 +49,8 @@ void writeCharToLCD(char);
  */
 void writeStringToLCD(char*);
 
-/**
-   Saves the cursors current position.
- */
-void saveCursorPosition(void);
-
-/**
-   Restores the last saved cursor position.
- */
-void restoreCursorPosition(void);
-
-//-----------------------------------------------------------------------------------------------
-// LCD command functions
+//---------------------------------------------------------------------------------------------
+// LCD command functions (all have associated ANSI escape)
 
 /**
   Clears the display and positions the cursor in the top left of the LCD screen.
@@ -169,12 +63,14 @@ void clearDisplay(void);
 void returnHome(void);
 
 /**
-   Gets the current row and column of the LCD cursor.
+   Gets the current row and column of the LCD cursor and sets given pointers row and column to
+   their respective values. Note indexes start at 1.
 */
 void getCursorPosition(uint8_t* row, uint8_t* column);
 
 /**
-   Sets given pointers row and column to the current row and column occupied by the LCD cursor.
+   Using the given parameters row and column, sets the current row and column occupied by the LCD
+   cursor. Note indexes start at 1.
  */
 void setCursorPosition(uint8_t row, uint8_t column);
 
@@ -224,6 +120,16 @@ void scrollUp(uint8_t n);
 void scrollDown(uint8_t n);
 
 /**
+   Saves the cursors current position.
+ */
+void saveCursorPosition(void);
+
+/**
+   Restores the last saved cursor position.
+ */
+void restoreCursorPosition(void);
+
+/**
    Clears part or all of screen dependent on the value of n:
    0 or missing: clear from cursor to end of screen
    1: clear from cursor to end of screen
@@ -249,7 +155,8 @@ void hideCursor(void);
  */
 void showCursor(void);
 
-//-----------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+// Utility functions (with no associated ASCII or ANSI escape)
 
 /**
    Turns the cursor blink off.
@@ -271,19 +178,17 @@ void displayOff(void);
  */
 void displayOn(void);
 
-//-----------------------------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------------------------
 
 /*
   UNIMPLEMENTED
  */
 char readCharFromLCD(void);
 
-//-----------------------------------------------------------------------------------------------
 
-/**
-  Initialize the LCD display via software initialization as specified by the datasheet.
-*/
-void initLCD(void);
+//---------------------------------------------------------------------------------------------
+// Advanced functions for special cases
 
 /**
   Initialize the LCD display via its internal reset circuit.
@@ -294,29 +199,78 @@ void initLCD(void);
  */
 void initLCDByInternalReset(void);
 
-//------------------------------------------------------------------------------------------
 
-/*
-  Mode and settings sanity check
-*/
+//---------------------------------------------------------------------------------------------
+// Mode and settings sanity check (preprocessor tests of lcdLibConfig.h)
+//---------------------------------------------------------------------------------------------
 
-#if !defined (LCD_RS) || !defined (LCD_RS_PORT) || !defined (LCD_RS_DDR) || !defined (LCD_RW) || !defined (LCD_RW_PORT) || !defined (LCD_RW_DDR) || !defined (LCD_ENABLE) || !defined (LCD_ENABLE_PORT) || !defined (LCD_ENABLE_DDR)
+#if !defined(LCD_CHARACTERS_PER_LINE)
+#error "All modes require LCD_CHARACTERS_PER_LINE to be defined."
+#elif !defined(LCD_NUMBER_OF_LINES)
+#error "All modes require LCD_NUMBER_OF_LINES to be defined."
+#elif !defined(LCD_LINE_BEGINNINGS)
+#error "All modes require LCD_LINE_BEGINNINGS to be defined."
+#else
+#define LCD_CHARACTERS_PER_SCREEN (LCD_CHARACTERS_PER_LINE * LCD_NUMBER_OF_LINES)
+#endif
+
+#if !defined (LCD_RS)          || \
+    !defined (LCD_RS_PORT)     || \
+    !defined (LCD_RS_DDR)      || \
+    !defined (LCD_RW)          || \
+    !defined (LCD_RW_PORT)     || \
+    !defined (LCD_RW_DDR)      || \
+    !defined (LCD_ENABLE)      || \
+    !defined (LCD_ENABLE_PORT) || \
+    !defined (LCD_ENABLE_DDR)
 #error "All modes require LCD_RS[,_PORT,_DDR], LCD_RW[,_PORT,_DDR], and LCD_ENABLE[,_PORT,_DDR] be defined."
 #endif
 
-#if defined (EIGHT_BIT_ARBITRARY_PIN_MODE) && defined (FOUR_BIT_MODE)
+#if defined (EIGHT_BIT_ARBITRARY_PIN_MODE) && \
+    defined (FOUR_BIT_MODE)
 #error "EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE are mutually exclusive. Choose one."
-#elif defined (EIGHT_BIT_ARBITRARY_PIN_MODE) || defined (FOUR_BIT_MODE)
+#elif defined (EIGHT_BIT_ARBITRARY_PIN_MODE) || \
+      defined (FOUR_BIT_MODE)
 
 // EIGHT_BIT_ARBITRARY_PIN_MODE specific requirements
 #ifdef EIGHT_BIT_ARBITRARY_PIN_MODE
-#if !defined (LCD_DBUS0) || !defined (LCD_DBUS0_PORT) || !defined (LCD_DBUS0_DDR) || !defined (LCD_DBUS0_PIN) || !defined (LCD_DBUS1) || !defined (LCD_DBUS1_PORT) || !defined (LCD_DBUS1_DDR) || !defined (LCD_DBUS1_PIN) || !defined (LCD_DBUS2) || !defined (LCD_DBUS2_PORT) || !defined (LCD_DBUS2_DDR) || !defined (LCD_DBUS2_PIN) || !defined (LCD_DBUS3) || !defined (LCD_DBUS3_PORT) || !defined (LCD_DBUS3_DDR) || !defined (LCD_DBUS3_PIN)
+#if !defined (LCD_DBUS0)      || \
+    !defined (LCD_DBUS0_PORT) || \
+    !defined (LCD_DBUS0_DDR)  || \
+    !defined (LCD_DBUS0_PIN)  || \
+    !defined (LCD_DBUS1)      || \
+    !defined (LCD_DBUS1_PORT) || \
+    !defined (LCD_DBUS1_DDR)  || \
+    !defined (LCD_DBUS1_PIN)  || \
+    !defined (LCD_DBUS2)      || \
+    !defined (LCD_DBUS2_PORT) || \
+    !defined (LCD_DBUS2_DDR)  || \
+    !defined (LCD_DBUS2_PIN)  || \
+    !defined (LCD_DBUS3)      || \
+    !defined (LCD_DBUS3_PORT) || \
+    !defined (LCD_DBUS3_DDR)  || \
+    !defined (LCD_DBUS3_PIN)
 #error "EIGHT_BIT_ARBITRARY_PIN_MODE require that LCD_DBUS*[,_PORT,_DDR,_PIN] be defined."
 #endif
 #endif
 
 // Requirements for EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE
-#if !defined (LCD_DBUS4) || !defined (LCD_DBUS4_PORT) || !defined (LCD_DBUS4_DDR) || !defined (LCD_DBUS4_PIN) || !defined (LCD_DBUS5) || !defined (LCD_DBUS5_PORT) || !defined (LCD_DBUS5_DDR) || !defined (LCD_DBUS5_PIN) || !defined (LCD_DBUS6) || !defined (LCD_DBUS6_PORT) || !defined (LCD_DBUS6_DDR) || !defined (LCD_DBUS6_PIN) || !defined (LCD_DBUS7) || !defined (LCD_DBUS7_PORT) || !defined (LCD_DBUS7_DDR) || !defined (LCD_DBUS7_PIN)
+#if !defined (LCD_DBUS4)      || \
+    !defined (LCD_DBUS4_PORT) || \
+    !defined (LCD_DBUS4_DDR)  || \
+    !defined (LCD_DBUS4_PIN)  || \
+    !defined (LCD_DBUS5)      || \
+    !defined (LCD_DBUS5_PORT) || \
+    !defined (LCD_DBUS5_DDR)  || \
+    !defined (LCD_DBUS5_PIN)  || \
+    !defined (LCD_DBUS6)      || \
+    !defined (LCD_DBUS6_PORT) || \
+    !defined (LCD_DBUS6_DDR)  || \
+    !defined (LCD_DBUS6_PIN)  || \
+    !defined (LCD_DBUS7)      || \
+    !defined (LCD_DBUS7_PORT) || \
+    !defined (LCD_DBUS7_DDR)  || \
+    !defined (LCD_DBUS7_PIN)
 #error "Both EIGHT_BIT_ARBITRARY_PIN_MODE and FOUR_BIT_MODE require that LCD_DBUS*[,_PORT,_DDR,_PIN] be defined."
 #endif
 
@@ -325,7 +279,10 @@ void initLCDByInternalReset(void);
 #define LCD_BF         LCD_DBUS7
 
 #else
-#if !defined (LCD_DBUS_PORT) || !defined (LCD_DBUS_DDR) || !defined (LCD_DBUS_PIN) || !defined (LCD_BF)
+#if !defined (LCD_DBUS_PORT) || \
+    !defined (LCD_DBUS_DDR)  || \
+    !defined (LCD_DBUS_PIN)  || \
+    !defined (LCD_BF)
 #error "Default mode requires that LCD_DBUS_[PORT,DDR,PIN] and LCD_BF be defined."
 #endif
 
@@ -336,3 +293,5 @@ void initLCDByInternalReset(void);
 #undef  LCD_DBUS7_PIN
 #define LCD_DBUS7_PIN  LCD_DBUS_PIN
 #endif
+
+#endif /* LCD_LIB_H */
