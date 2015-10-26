@@ -420,6 +420,7 @@ void writeCharToLCD(char c) {
 
 void writeStringToLCD(char* str) {
   while (*str != '\0') {
+#ifdef LCD_ANSI_ESCAPE_ENABLE
     // Check for ANSI CSI (Control Sequence Introducer)
     if (*str == '\e') {
       if (*(++str) != '\0' && *str == '[') {
@@ -561,6 +562,9 @@ void writeStringToLCD(char* str) {
     }
 
     str++;
+#else
+    writeCharToLCD(*(str++));
+#endif
   }
 }
 

@@ -52,6 +52,9 @@
                                 0x14, \
                                 0x54    ///< Memory locations for each physical line ordered 1 to LCD_NUMBER_OF_LINES
 
+/* Support ANSI escapes; comment to disable */
+#define LCD_ANSI_ESCAPE_ENABLE
+
 /* Modes */
 
 // Default mode: 8-bit data bus
