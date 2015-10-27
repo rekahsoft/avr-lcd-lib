@@ -214,6 +214,18 @@ void initLCDByInternalReset(void);
 #define LCD_CHARACTERS_PER_SCREEN (LCD_CHARACTERS_PER_LINE * LCD_NUMBER_OF_LINES)
 #endif
 
+#if !defined(LCD_FONT_5x8) &&\
+    !defined(LCD_FONT_5x10)
+#error "All modes require LCD_FONT_5x8 or LCD_FONT_5x10 to be defined."
+#elif defined(LCD_FONT_5x8) && \
+      defined(LCD_FONT_5x10)
+#error "LCD_FONT_5x8 and LCD_FONT_5x10 are mutually exclusive. Choose one."
+#elif defined(LCD_FONT_5x8)
+#define LCD_FONT 0
+#elif defined(LCD_FONT_5x10)
+#define LCD_FONT (1 << INSTR_FUNC_SET_F)
+#endif
+
 #if !defined (LCD_RS)          || \
     !defined (LCD_RS_PORT)     || \
     !defined (LCD_RS_DDR)      || \

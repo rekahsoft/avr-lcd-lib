@@ -52,6 +52,10 @@
                                 0x14, \
                                 0x54    ///< Memory locations for each physical line ordered 1 to LCD_NUMBER_OF_LINES
 
+/* Which font to use (can only leave one uncommented) */
+#define LCD_FONT_5x8
+//#define LCD_FONT_5x10
+
 /* Support ANSI escapes; comment to disable */
 #define LCD_ANSI_ESCAPE_ENABLE
 

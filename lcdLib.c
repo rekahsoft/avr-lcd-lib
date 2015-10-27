@@ -320,11 +320,11 @@ void initLCD(void) {
 #if defined (FOUR_BIT_MODE)
   // Function Set (4-bit interface; 2 lines with 5x7 dot character font)
   writeLCDDBusNibble_(CMD_INIT_FOUR_BIT);
-  writeLCDInstr_(CMD_INIT_FOUR_BIT | (1 << INSTR_FUNC_SET_N));
+  writeLCDInstr_(CMD_INIT_FOUR_BIT | (1 << INSTR_FUNC_SET_N) | LCD_FONT);
 #else
   // Function set (8-bit interface; 2 lines with 5x7 dot character font)
   // RS=RW=0, DBUS=b00111000,0x38
-  writeLCDInstr_(INSTR_FUNC_SET | (1 << INSTR_FUNC_SET_DL) | (1 << INSTR_FUNC_SET_N));
+  writeLCDInstr_(INSTR_FUNC_SET | (1 << INSTR_FUNC_SET_DL) | (1 << INSTR_FUNC_SET_N) | LCD_FONT);
 #endif
 
   /* BF now can be checked */
