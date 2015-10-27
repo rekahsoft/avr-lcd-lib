@@ -211,6 +211,13 @@ void initLCDByInternalReset(void);
 #elif !defined(LCD_LINE_BEGINNINGS)
 #error "All modes require LCD_LINE_BEGINNINGS to be defined."
 #else
+
+#if LCD_NUMBER_OF_LINES == 1
+#define LCD_LINES 0
+#else
+#define LCD_LINES (1 << INSTR_FUNC_SET_N)
+#endif
+
 #define LCD_CHARACTERS_PER_SCREEN (LCD_CHARACTERS_PER_LINE * LCD_NUMBER_OF_LINES)
 #endif
 
