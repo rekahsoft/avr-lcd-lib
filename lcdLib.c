@@ -691,37 +691,31 @@ void eraseDisplay(uint8_t n) {
 }
 
 void eraseInline(uint8_t n) {
-  char pos_x = currentLineChars;
+  uint8_t old_row, old_column;
+  getCursorPosition(&old_row, &old_column);
 
-  // BUG: when cursor is on the last character of the last line, writing currentLineChars
-  // number of spaces will currently clear the screen due to the way writeCharToLCD handles
-  // text wrapping. Specifically after the last character (bottom right) of the screen is
-  // written the screen is automatically cleared.
   switch (n) {
   case 0: // Clear from cursor to end of line
-    for (uint8_t i = 0; i < (LCD_CHARACTERS_PER_LINE - currentLineChars); i++)
+    for (uint8_t i = old_column; i <= LCD_CHARACTERS_PER_LINE; i++)
       writeCharToLCD(' ');
-
-    // Move cursor back one char and line so its in its original position
-    setCursorPosition(pos_x, currentLineNum);
     break;
   case 1: // Clear from cursor to beginning of line
-    writeCharToLCD('\r');
-    for (uint8_t i = 0; i < pos_x; i++)
+    setCursorPosition(old_row, 1);
+    for (uint8_t i = 1; i <= old_column; i++)
       writeCharToLCD(' ');
-    moveCursorToColumn(pos_x + 1);
-
     break;
   case 2: // Clear entire line
-    writeCharToLCD('\r');
-    for (uint8_t i = 0; i < LCD_CHARACTERS_PER_LINE; i++)
-      writeCharToLCD(' ');
-
-    // Move cursor back one line so its in its original position
-    setCursorPosition(pos_x + 1, currentLineNum);
-  default: // Invalid argument; do nothing
+    setCursorPosition(old_row, 1);
+    for (uint8_t i = 1; i <= LCD_CHARACTERS_PER_LINE; i++) {
+      loop_until_LCD_BF_clear();
+      writeCharToLCD_(' ');
+    }
     break;
+  default: // Invalid argument; do nothing
+    return;
   }
+
+  setCursorPosition(old_row, old_column);
 }
 
 void scrollUp(uint8_t n) {
