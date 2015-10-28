@@ -206,6 +206,49 @@ static void writeCharToLCD_(char c) {
   writeLCDDBusByte_(c);
 }
 
+static uint8_t readLCDDBusByte_(void) {
+  LCD_RS_PORT |= (1 << LCD_RS); // RS=1
+  LCD_RW_PORT |= (1 << LCD_RW); // RW=1
+
+  LCD_ENABLE_PORT |= (1 << LCD_ENABLE);
+  _delay_us(1);                          // 'delay data time' and 'enable pulse width'
+
+  // Read data
+  char c = 0;
+#if defined(FOUR_BIT_MODE)
+  if (LCD_DBUS7_PIN & (1 << LCD_DBUS7)) c |= (1 << 7);
+  if (LCD_DBUS6_PIN & (1 << LCD_DBUS6)) c |= (1 << 6);
+  if (LCD_DBUS5_PIN & (1 << LCD_DBUS5)) c |= (1 << 5);
+  if (LCD_DBUS4_PIN & (1 << LCD_DBUS4)) c |= (1 << 4);
+
+  LCD_ENABLE_PORT &= ~(1 << LCD_ENABLE);
+  _delay_us(1);                          // 'address hold time', 'data hold time' and 'enable cycle width'
+  LCD_ENABLE_PORT |= (1 << LCD_ENABLE);
+  _delay_us(1);                          // 'delay data time' and 'enable pulse width'
+
+  if (LCD_DBUS7_PIN & (1 << LCD_DBUS7)) c |= (1 << 3);
+  if (LCD_DBUS6_PIN & (1 << LCD_DBUS6)) c |= (1 << 2);
+  if (LCD_DBUS5_PIN & (1 << LCD_DBUS5)) c |= (1 << 1);
+  if (LCD_DBUS4_PIN & (1 << LCD_DBUS4)) c |= (1 << 0);
+#elif defined(EIGHT_BIT_ARBITRARY_PIN_MODE)
+  if (LCD_DBUS7_PIN & (1 << LCD_DBUS7)) c |= (1 << 7);
+  if (LCD_DBUS6_PIN & (1 << LCD_DBUS6)) c |= (1 << 6);
+  if (LCD_DBUS5_PIN & (1 << LCD_DBUS5)) c |= (1 << 5);
+  if (LCD_DBUS4_PIN & (1 << LCD_DBUS4)) c |= (1 << 4);
+  if (LCD_DBUS3_PIN & (1 << LCD_DBUS3)) c |= (1 << 3);
+  if (LCD_DBUS2_PIN & (1 << LCD_DBUS2)) c |= (1 << 2);
+  if (LCD_DBUS1_PIN & (1 << LCD_DBUS1)) c |= (1 << 1);
+  if (LCD_DBUS0_PIN & (1 << LCD_DBUS0)) c |= (1 << 0);
+#else
+  c = LCD_DBUS_PIN;
+#endif
+
+  LCD_ENABLE_PORT &= ~(1 << LCD_ENABLE);
+  _delay_us(1);                          // 'address hold time', 'data hold time' and 'enable cycle width'
+
+  return c;
+}
+
 /*
   Given a character string, and a uint8_t pointer, reads the character string until a
   non-numerical ASCII character, returning the integer representation of the number read. At
@@ -237,13 +280,9 @@ static uint8_t readASCIINumber(char* str, uint8_t* found_num, char** new_loc) {
 }
 
 /*
-  Set all pins of LCD_DBUS, as well as pins LCD_RS, and LCD_RW as outputs
+  Set all pins of LCD_DBUS as outputs
 */
-static inline void enableLCDOutput(void) {
-  LCD_RS_DDR |= (1 << LCD_RS);
-  LCD_RW_DDR |= (1 << LCD_RW);
-  LCD_ENABLE_DDR |= (1 << LCD_ENABLE);
-
+static inline void setLCDDBusAsOutputs(void) {
 #if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
   LCD_DBUS7_DDR |= (1 << LCD_DBUS7);
   LCD_DBUS6_DDR |= (1 << LCD_DBUS6);
@@ -261,13 +300,9 @@ static inline void enableLCDOutput(void) {
 }
 
 /*
-  Set all pins of LCD_DBUS as well as LCD_RS, and LCD_RW as inputs (disabling their output)
+  Set all pins of LCD_DBUS as inputs (disabling their output)
 */
-static inline void disableLCDOutput(void) {
-  LCD_RS_DDR &= ~(1 << LCD_RS);
-  LCD_RW_DDR &= ~(1 << LCD_RW);
-  LCD_ENABLE_DDR &= ~(1 << LCD_ENABLE);
-
+static inline void setLCDDBusAsInputs(void) {
 #if defined (FOUR_BIT_MODE) || defined (EIGHT_BIT_ARBITRARY_PIN_MODE)
   LCD_DBUS7_DDR &= ~(1 << LCD_DBUS7);
   LCD_DBUS6_DDR &= ~(1 << LCD_DBUS6);
@@ -289,7 +324,6 @@ static inline void disableLCDOutput(void) {
   pause must follow before sending new commands to the LCD using writeLCD*_ functions.
  */
 static inline void softwareLCDInitPulse(void) {
-  enableLCDOutput();
   LCD_RS_PORT &= ~(1 << LCD_RS); // RS=0
   LCD_RW_PORT &= ~(1 << LCD_RW); // RW=0
 
@@ -308,7 +342,12 @@ static inline void softwareLCDInitPulse(void) {
   Do software initialization as specified by the datasheet
 */
 void initLCD(void) {
-  enableLCDOutput();
+  // Set LCD_RS, LCD_RW and LCD_ENABLE as outputs
+  LCD_RS_DDR |= (1 << LCD_RS);
+  LCD_RW_DDR |= (1 << LCD_RW);
+  LCD_ENABLE_DDR |= (1 << LCD_ENABLE);
+
+  setLCDDBusAsOutputs();
 
   _delay_us(LCD_INIT_DELAY0); // Wait minimum 15ms as per datasheet
   softwareLCDInitPulse();
@@ -796,21 +835,65 @@ void displayOn(void) {
 
 //-----------------------------------------------------------------------------------------------
 
-/* char readCharFromLCD(void) { */
-/*   loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions */
+char readCharFromLCD(uint8_t row, uint8_t column) {
+  uint8_t old_row, old_column;
+  getCursorPosition(&old_row, &old_column);
 
-/*   LCD_CTRL_PORT |= (1 << LCD_RW) | (1 << LCD_RW); // RS=RW=1 */
-/*   LCD_DBUS_DDR = 0; // Set all LCD_DBUS_PORT pins as inputs */
-/*   clkLCD(); */
+  setCursorPosition(row, column);
 
-/*   char c = LCD_DBUS_PIN; */
-/*   LCD_DBUS_DDR = 0xff; // Reset all LCD_DBUS_PORT pins to outputs */
-/*   return c; */
-/* } */
+  loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
+  setLCDDBusAsInputs();
+  char c = readLCDDBusByte_();
+  setLCDDBusAsOutputs();
 
+  setCursorPosition(old_row, old_column);
+  return c;
+}
+
+void readLCDLine(uint8_t i, char* str) {
+  readCharsFromLCD(i, 1, i, LCD_CHARACTERS_PER_LINE, str, LCD_CHARACTERS_PER_LINE + 1);
+}
 
 //---------------------------------------------------------------------------------------------
 // Advanced functions for special cases
+
+void readCharsFromLCD(uint8_t from_row, uint8_t from_column, uint8_t to_row, uint8_t to_column, char* str, uint8_t len) {
+  uint8_t old_row, old_column;
+  getCursorPosition(&old_row, &old_column);
+  setCursorPosition(from_row, from_column);
+
+  for (uint8_t i = 0; i < len - 1 && from_row <= to_row; i++) {
+    if (from_row == LCD_NUMBER_OF_LINES && from_column == LCD_CHARACTERS_PER_LINE) {
+      // Last character on screen
+      loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
+      setLCDDBusAsInputs();
+      *(str++) = readLCDDBusByte_();
+      setLCDDBusAsOutputs();
+    } else if (from_column == LCD_CHARACTERS_PER_LINE) { // End of line (but not last one)
+      loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
+      setLCDDBusAsInputs();
+      *(str++) = readLCDDBusByte_();
+      setLCDDBusAsOutputs();
+
+      from_row += 1;
+      from_column = 1;
+      setCursorPosition(from_row, from_column);
+    } else {
+      loop_until_LCD_BF_clear(); // Wait until LCD is ready for new instructions
+      setLCDDBusAsInputs();
+      *(str++) = readLCDDBusByte_();
+      setLCDDBusAsOutputs();
+
+      from_column++;
+    }
+  }
+
+  // Ensure array is terminated with null character
+  *str = '\0';
+
+  setCursorPosition(old_row, old_column);
+  setLCDDBusAsOutputs();
+}
 
 /*
   Initialize LCD using the internal reset circuitry.
@@ -820,7 +903,7 @@ void displayOn(void) {
         modes as well the 4-bit mode.
  */
 void initLCDByInternalReset(void) {
-  enableLCDOutput();
+  setLCDDBusAsOutputs();
 
   // Function set (8-bit interface; 2 lines with 5x7 dot character font)
   writeLCDInstr_(INSTR_FUNC_SET | (1 << INSTR_FUNC_SET_DL) | (1 << INSTR_FUNC_SET_N));

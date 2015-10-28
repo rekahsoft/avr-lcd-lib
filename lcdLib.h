@@ -178,17 +178,29 @@ void displayOff(void);
  */
 void displayOn(void);
 
-
 //---------------------------------------------------------------------------------------------
 
-/*
-  UNIMPLEMENTED
+/**
+   Read a single character from the row and column given (1 based) returning the cursor to
+   its previous original position.
  */
-char readCharFromLCD(void);
+char readCharFromLCD(uint8_t row, uint8_t column);
 
+/**
+   Read a line i (ones based) into str.
+*/
+void readLCDLine(uint8_t i, char* str);
 
 //---------------------------------------------------------------------------------------------
 // Advanced functions for special cases
+
+/**
+   Read len characters from (from_row, from_column) to (to_row, to_column) returning the cursor
+   to its original position after the read. Upon success (not overflowing the screen), 0 is
+   returned; otherwise non zero will be returned. The str pointer will be updated with the
+   characters read from the screen. Even in the case of failure, str may be partially populated.
+ */
+void readCharsFromLCD(uint8_t from_row, uint8_t from_column, uint8_t to_row, uint8_t to_column, char* str, uint8_t len);
 
 /**
   Initialize the LCD display via its internal reset circuit.
