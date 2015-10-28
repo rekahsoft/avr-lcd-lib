@@ -784,9 +784,63 @@ void eraseInline(uint8_t n) {
 }
 
 void scrollUp(uint8_t n) {
+#if LCD_NUMBER_OF_LINES == 1
+  clearDisplay();
+#else
+  if (n >= LCD_NUMBER_OF_LINES) {
+    clearDisplay();
+  } else {
+    uint8_t old_row, old_column;
+    getCursorPosition(&old_row, &old_column);
+
+    uint8_t len = (LCD_NUMBER_OF_LINES - n)*LCD_CHARACTERS_PER_LINE + 1;
+    char str[len];
+    readCharsFromLCD(n + 1, 1, LCD_NUMBER_OF_LINES, LCD_CHARACTERS_PER_LINE, str, len);
+    setCursorPosition(1, 1); // returnHome();
+    writeStringToLCD(str);
+
+    // Add n newlines to bottom of screen
+    for (uint8_t i = 0; i < n; i++) {
+      setCursorPosition(LCD_NUMBER_OF_LINES - i, 1);
+      eraseInline(2);
+    }
+
+    setCursorPosition(old_row, old_column);
+  }
+#endif
 }
 
 void scrollDown(uint8_t n) {
+#if LCD_NUMBER_OF_LINES == 1
+  clearDisplay();
+#else
+  if (n >= LCD_NUMBER_OF_LINES) {
+    clearDisplay();
+  } else {
+    uint8_t old_row, old_column;
+    getCursorPosition(&old_row, &old_column);
+
+    uint8_t len = (LCD_NUMBER_OF_LINES - n)*LCD_CHARACTERS_PER_LINE + 1;
+    char str[len];
+    readCharsFromLCD(1, 1, LCD_NUMBER_OF_LINES - n, LCD_CHARACTERS_PER_LINE, str, len);
+
+    for (uint8_t column = n + 1, i = 0; column <= LCD_NUMBER_OF_LINES; column++) {
+      setCursorPosition(column , 1);
+      for (uint8_t row = 1; row <= LCD_CHARACTERS_PER_LINE; row++) {
+        loop_until_LCD_BF_clear();
+        writeCharToLCD_(str[i++]);
+      }
+    }
+
+    // Add n newlines to top of screen
+    for (uint8_t i = 1; i <= n; i++) {
+      setCursorPosition(i, 1);
+      eraseInline(2);
+    }
+
+    setCursorPosition(old_row, old_column);
+  }
+#endif
 }
 
 void saveCursorPosition() {
