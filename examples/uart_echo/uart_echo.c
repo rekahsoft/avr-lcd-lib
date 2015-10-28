@@ -16,7 +16,7 @@
  */
 
 /**
- * File: lcdOutput.c
+ * File: uart_echo.c
  * Author: Collin J. Doering <collin.doering@rekahsoft.ca>
  * Date: Sep 17, 2015
  */
