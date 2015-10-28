@@ -679,15 +679,41 @@ void moveCursorToColumn(uint8_t n) {
 }
 
 void eraseDisplay(uint8_t n) {
+  uint8_t old_row, old_column;
+  getCursorPosition(&old_row, &old_column);
+
   switch (n) {
   case 0: // Clear from cursor to end of screen
+    {
+      uint8_t len = (LCD_NUMBER_OF_LINES - old_row)*LCD_CHARACTERS_PER_LINE + (LCD_CHARACTERS_PER_LINE - old_column);
+      for (uint8_t i = 0; i < len; i++)
+        writeCharToLCD(' ');
+
+      // Write last char without scrolling
+      loop_until_LCD_BF_clear();
+      writeCharToLCD_(' ');
+      break;
+    }
   case 1: // Clear from cursor to beginning of screen
+    {
+      uint8_t len = (old_row - 1)*LCD_CHARACTERS_PER_LINE + old_column;
+      returnHome();
+      for (uint8_t i = 0; i < len; i++)
+        writeCharToLCD(' ');
+
+      // Write last char without scrolling
+      loop_until_LCD_BF_clear();
+      writeCharToLCD_(' ');
+      break;
+    }
   case 2: // Clear entire screen
     clearDisplay();
     break;
   default: // Invalid argument; do nothing
     break;
   }
+
+  setCursorPosition(old_row, old_column);
 }
 
 void eraseInline(uint8_t n) {
