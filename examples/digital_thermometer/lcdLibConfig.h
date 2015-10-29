@@ -57,7 +57,7 @@
 //#define LCD_FONT_5x10
 
 /* Support ANSI escapes; comment to disable */
-#define LCD_ANSI_ESCAPE_ENABLE
+//#define LCD_ANSI_ESCAPE_ENABLE
 
 /* Modes */
 
