@@ -34,13 +34,62 @@
 #include "lcdLib.h"
 #include "ansi_escapes.h"
 
+void initADC(void) {
+  ADMUX  |= (1 << REFS0);                // reference voltage on AVCC
+  ADCSRA |= (1 << ADPS2) | (1 << ADPS1); // ADC prescaler 64
+
+  ADCSRA |= (1 << ADEN);                 // Enable ADC
+  ADCSRA |= (1 << ADATE);                // Auto trigger enable
+  ADCSRA |= (1 << ADSC);                 // Start first conversion
+}
+
 int main(void) {
   clock_prescale_set(clock_div_1);
 
   initLCD();
+  initADC();
+
+  hideCursor();
+  writeStringToLCD("Temperature: ");
+  saveCursorPosition();
 
   while (1) {
-    // Loop
+    float v = ADC * (5000 / 1024);
+    int8_t t = (int8_t) ((v - 500) / 10);
+
+    char str[5];
+    uint8_t i = 1, sigDig = 0;
+
+    if (t < 0) {
+      str[0] = '-';
+      t *= -1;
+    } else {
+      str[0] = '+';
+    }
+
+    for (uint8_t j = 100; j >= 1; j /= 10) {
+      uint8_t digit = (uint8_t) (t / j);
+      if (!sigDig) {
+        if (digit != 0) {
+          sigDig = 1;
+          str[i++] = digit + 0x30;
+        } else {
+          str[i++] = ' ';
+        }
+      } else {
+        str[i++] = digit + 0x30;
+      }
+
+      t = t - digit*j;
+    }
+    str[i] = '\0';
+
+    writeStringToLCD(str);
+    writeCharToLCD(0xdf);
+    writeStringToLCD("C");
+
+    restoreCursorPosition();
+    _delay_ms(16);
   }
 
   return 0;
